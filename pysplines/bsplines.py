@@ -3,14 +3,28 @@ import sympy
 import math
 from scipy.integrate import simps
 import matplotlib.pyplot as plt
+import warnings
 
-class ALexpression():
+
+class ALexpression:
     """
     A dual Analytical-Lambdified form expression of a single variable
+
+    Attributes:
+    - aform: analytical sympy form of the expression
+    - lform: fully lambdified for of the expression
     """
-    def __init__(self, t, sympy_expression):
-        self.t = t
+
+    def __init__(self, sympy_expression):
         self.aform = sympy_expression
+        self.t = sympy_expression.free_symbols
+        if len(self.t) > 1:
+            warnings.warn(
+                "Be careful with the lambdified expression {}, as it has more than one free symbol.".format(
+                    self.aform
+                )
+            )
+
         self.lform = sympy.lambdify(self.t, self.aform)
 
 
@@ -37,9 +51,9 @@ class sympy_Bspline:
         self.kv = self.kv_bspline()
         self.t_to_point_dict = dict()
 
-        self.construct_bspline_basis()
-        self.spline = self.sympy_bspline_expression()
-        self.dom = np.linspace(0,self.max_param,self.n)
+        self.bspline_basis = self.construct_bspline_basis()
+        self.spline = self.construct_bspline_expression()
+        self.dom = np.linspace(0, self.max_param, self.n)
         self.bspline_getSurface()
 
     def kv_bspline(self):
@@ -65,28 +79,26 @@ class sympy_Bspline:
         return list(kv)
 
     def construct_bspline_basis(self):
-        self.bspline_basis = []
+        bspline_basis = []
         for i in range(len(self.cv)):
-            self.bspline_basis.append(
-                sympy.bspline_basis(self.degree, self.kv, i, self.x)
+            bspline_basis.append(
+                ALexpression(sympy.bspline_basis(self.degree, self.kv, i, self.x))
             )
-        self.lambdify_bspline_basis_expressions()
+        return bspline_basis
 
-    def lambdify_bspline_basis_expressions(self):
-
-        self.bspline_basis_lambda = []
-        for i in range(len(self.cv)):
-            self.bspline_basis_lambda.append(
-                sympy.lambdify(self.x, self.bspline_basis[i])
-            )
-
-    def sympy_bspline_expression(self):
+    def construct_bspline_expression(self):
         bspline_expression = [0, 0]
 
         for i in range(len(self.cv)):
-            bspline_expression[0] += self.cv[i][0] * self.bspline_basis[i]
-            bspline_expression[1] += self.cv[i][1] * self.bspline_basis[i]
-        return bspline_expression
+            bspline_expression[0] += self.cv[i][0] * self.bspline_basis[i].aform
+            bspline_expression[1] += self.cv[i][1] * self.bspline_basis[i].aform
+        return ALexpression(bspline_expression)
+
+    def get_displacement_from_point(self, point, controlPointNumber):
+        raise NotImplementedError
+        t = self.get_t_from_point(point)
+        displacement = self.bspline_basis_lambda[controlPointNumber].lform(t).item()
+        return [displacement, displacement]
 
     def bspline_getSurface(self):
 

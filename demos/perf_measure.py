@@ -1,5 +1,6 @@
 from pysplines.bsplines import sympy_Bspline
-from pysplines.timeperformance import timethis
+from pysplines.decorators import timethis
+
 
 class Example_BSpline(sympy_Bspline):
     """

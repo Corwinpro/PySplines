@@ -22,8 +22,8 @@ class Example_BSpline(sympy_Bspline):
 
 if __name__ == "__main__":
 
+    @timethis(n_iter=10)
     def create_bspline():
         example_bspline = Example_BSpline()
-        example_bspline.plot()
 
     create_bspline()

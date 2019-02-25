@@ -9,9 +9,9 @@ class Example_BSpline(sympy_Bspline):
     def __init__(self, degree=2, n=100, periodic=False):
         top_control_points = [
             [0.0, 0.0],
-            [0.1, 0.0],
-            [0.2, 0.0],
-            [0.3, 0.0],
+            [0.1, 0.1],
+            [0.2, -0.1],
+            [0.3, 0.2],
             [0.4, 0.0],
         ]
         self.example_cv = top_control_points
@@ -22,8 +22,9 @@ class Example_BSpline(sympy_Bspline):
 
 if __name__ == "__main__":
 
-    @timethis(n_iter=5)
+    @timethis(n_iter=1)
     def create_bspline():
         example_bspline = Example_BSpline()
+        example_bspline.plot()
 
     create_bspline()

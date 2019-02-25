@@ -33,6 +33,7 @@ class sympy_Bspline:
         """
             Clamped B-Spline with sympy
 
+            space_dimension: problem dimension (2D only)
             cv: control points vector
             degree:   Curve degree
             n: N discretization points
@@ -42,6 +43,7 @@ class sympy_Bspline:
         """
         self.x = sympy.var("x")
 
+        self.space_dimension = 2
         self.cv = np.array(cv)
         self.periodic = periodic
         self.degree = degree
@@ -88,12 +90,14 @@ class sympy_Bspline:
         return bspline_basis
 
     def construct_bspline_expression(self):
-        bspline_expression = [0, 0]
+        bspline_expression = [0] * self.space_dimension
 
         for i in range(len(self.cv)):
-            bspline_expression[0] += self.cv[i][0] * self.bspline_basis[i].aform
-            bspline_expression[1] += self.cv[i][1] * self.bspline_basis[i].aform
-        return [ALexpression(bspline_expression[i]) for i in range(2)]
+            for j in range(self.space_dimension):
+                bspline_expression[j] += self.cv[i][j] * self.bspline_basis[i].aform
+        return [
+            ALexpression(bspline_expression[i]) for i in range(self.space_dimension)
+        ]
 
     def get_displacement_from_point(self, point, controlPointNumber):
         raise NotImplementedError
@@ -107,8 +111,8 @@ class sympy_Bspline:
 
         for i in range(len(self.rvals)):
             self.t_to_point_dict[self.dom[i]] = self.rvals[i]
-            self.rvals[i][0] = math.trunc(self.rvals[i][0] * 1.0e8) / 1.0e8
-            self.rvals[i][1] = math.trunc(self.rvals[i][1] * 1.0e8) / 1.0e8
+            for j in range(self.space_dimension):
+                self.rvals[i][j] = math.trunc(self.rvals[i][j] * 1.0e8) / 1.0e8
 
     def evaluate_expression(self, expression, point=None):
         """

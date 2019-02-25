@@ -27,6 +27,9 @@ class ALexpression:
 
         self.lform = sympy.lambdify(self.t, self.aform)
 
+    def __getitem__(self, t):
+        return self.lform(t)
+
 
 class sympy_Bspline:
     def __init__(self, cv, degree=3, n=100, periodic=False):
@@ -105,7 +108,7 @@ class sympy_Bspline:
         self.rvals = self.evaluate_expression(self.bspline)
 
         for i in range(len(self.rvals)):
-            self.point_to_t_dict[self.rvals[i]] = self.dom[i]
+            self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
             for j in range(self.space_dimension):
                 self.rvals[i][j] = (
                     math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
@@ -129,11 +132,11 @@ class sympy_Bspline:
         if isinstance(expression, list):
             n = len(expression)
             for r in domain:
-                val = [float(expression[i].lform(r)) for i in range(n)]
+                val = [expression[i][r] for i in range(n)]
                 expression_val.append(val)
         elif isinstance(expression, ALexpression):
             for r in domain:
-                val = expression.lform(r)
+                val = expression[r]
                 expression_val.append(val)
         else:
             raise NotImplementedError
@@ -149,17 +152,16 @@ class sympy_Bspline:
             color="black",
         )
         # self.plot_cv(window)
-        # window.show()
+        window.show()
 
     def get_displacement_from_point(self, point, controlPointNumber):
-        raise NotImplementedError
         t = self.get_t_from_point(point)
-        displacement = self.bspline_basis[controlPointNumber].lform(t).item()
+        displacement = self.bspline_basis[controlPointNumber][t]
         return [displacement, displacement]
 
     def get_t_from_point(self, point):
 
-        point = list(point)
+        point = tuple(point)
         if point in self.point_to_t_dict:
             return self.point_to_t_dict[point]
 

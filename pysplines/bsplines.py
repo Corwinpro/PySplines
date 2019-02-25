@@ -49,11 +49,12 @@ class sympy_Bspline:
 
         self.max_param = self.cv.shape[0] - (self.degree * (1 - self.periodic))
         self.kv = self.kv_bspline()
+        self.dom = np.linspace(0, self.max_param, self.n)
+
         self.t_to_point_dict = dict()
 
         self.bspline_basis = self.construct_bspline_basis()
-        self.spline = self.construct_bspline_expression()
-        self.dom = np.linspace(0, self.max_param, self.n)
+        self.bspline = self.construct_bspline_expression()
         self.bspline_getSurface()
 
     def kv_bspline(self):
@@ -92,17 +93,17 @@ class sympy_Bspline:
         for i in range(len(self.cv)):
             bspline_expression[0] += self.cv[i][0] * self.bspline_basis[i].aform
             bspline_expression[1] += self.cv[i][1] * self.bspline_basis[i].aform
-        return ALexpression(bspline_expression)
+        return [ALexpression(bspline_expression[i]) for i in range(2)]
 
     def get_displacement_from_point(self, point, controlPointNumber):
         raise NotImplementedError
         t = self.get_t_from_point(point)
-        displacement = self.bspline_basis_lambda[controlPointNumber].lform(t).item()
+        displacement = self.bspline_basis[controlPointNumber].lform(t).item()
         return [displacement, displacement]
 
     def bspline_getSurface(self):
 
-        self.rvals = self.evaluate_expression(self.spline)
+        self.rvals = self.evaluate_expression(self.bspline)
 
         for i in range(len(self.rvals)):
             self.t_to_point_dict[self.dom[i]] = self.rvals[i]
@@ -113,32 +114,26 @@ class sympy_Bspline:
         """
         Given a sympy expression, a point (or set of points), calculates
         values of the expression at the point(s).
+
+        Returns: a list of the expression values
+
+        TODO: check all possible usage cases
         """
+        if point is None:
+            domain = self.dom
+        else:
+            domain = (point,)
+
         expression_val = []
         if isinstance(expression, list):
             n = len(expression)
-            if point is not None:
-                vals = []
-                for i in range(n):
-                    vals.append(float(expression[i].subs(self.x, point)))
-                return vals
-            else:
-                lambda_expression = [
-                    sympy.lambdify(self.x, expression[i]) for i in range(n)
-                ]
-                for r in self.dom:
-                    vals = []
-                    for i in range(n):
-                        vals.append(lambda_expression[i](r))
-                    expression_val.append(vals)
+            for r in domain:
+                val = [float(expression[i].lform(r)) for i in range(n)]
+                expression_val.append(val)
         else:
-            if point is not None:
-                return float(expression.subs(self.x, point))
-            else:
-                lambda_expression = sympy.lambdify(self.x, expression)
-                for r in self.dom:
-                    val = lambda_expression(r)
-                    expression_val.append(float(val))
+            for r in domain:
+                val = expression.lform(r)
+                expression_val.append(val)
 
         return expression_val
 
@@ -151,5 +146,5 @@ class sympy_Bspline:
             color="black",
         )
         # self.plot_cv(window)
-        window.show()
+        # window.show()
 

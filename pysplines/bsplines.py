@@ -53,7 +53,8 @@ class sympy_Bspline:
         self.kv = self.kv_bspline()
         self.dom = np.linspace(0, self.max_param, self.n)
 
-        self.t_to_point_dict = dict()
+        self.point_to_t_dict = dict()
+        self.tolerance = 1.0e-8
 
         self.bspline_basis = self.construct_bspline_basis()
         self.bspline = self.construct_bspline_expression()
@@ -99,20 +100,16 @@ class sympy_Bspline:
             ALexpression(bspline_expression[i]) for i in range(self.space_dimension)
         ]
 
-    def get_displacement_from_point(self, point, controlPointNumber):
-        raise NotImplementedError
-        t = self.get_t_from_point(point)
-        displacement = self.bspline_basis[controlPointNumber].lform(t).item()
-        return [displacement, displacement]
-
     def bspline_getSurface(self):
 
         self.rvals = self.evaluate_expression(self.bspline)
 
         for i in range(len(self.rvals)):
-            self.t_to_point_dict[self.dom[i]] = self.rvals[i]
+            self.point_to_t_dict[self.rvals[i]] = self.dom[i]
             for j in range(self.space_dimension):
-                self.rvals[i][j] = math.trunc(self.rvals[i][j] * 1.0e8) / 1.0e8
+                self.rvals[i][j] = (
+                    math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
+                )
 
     def evaluate_expression(self, expression, point=None):
         """
@@ -134,10 +131,12 @@ class sympy_Bspline:
             for r in domain:
                 val = [float(expression[i].lform(r)) for i in range(n)]
                 expression_val.append(val)
-        else:
+        elif isinstance(expression, ALexpression):
             for r in domain:
                 val = expression.lform(r)
                 expression_val.append(val)
+        else:
+            raise NotImplementedError
 
         return expression_val
 
@@ -151,4 +150,107 @@ class sympy_Bspline:
         )
         # self.plot_cv(window)
         # window.show()
+
+    def get_displacement_from_point(self, point, controlPointNumber):
+        raise NotImplementedError
+        t = self.get_t_from_point(point)
+        displacement = self.bspline_basis[controlPointNumber].lform(t).item()
+        return [displacement, displacement]
+
+    def get_t_from_point(self, point):
+
+        point = list(point)
+        if point in self.point_to_t_dict:
+            return self.point_to_t_dict[point]
+
+        min_dist = previous_distance = 1.0 / self.tolerance
+
+        for r in self.rvals:
+            current_distance = np.linalg.norm(np.array(r) - np.array(point))
+            if current_distance > previous_distance:
+                continue
+            if current_distance < min_dist:
+                min_dist = current_distance
+                closest_point = r
+            previous_distance = current_distance
+
+        index = self.rvals.index(closest_point)
+        t = self.dom[index]
+
+        # If we are 'very' close to an existing point, we just return t
+        # This helps if a point is 'out of the domain' but still very close
+        if min_dist < self.tolerance:
+            return t
+            # We get the distance to the points to the left and to the right of the closest point
+            # ...---o---o---left---closest---right---o----o---...
+            # If the first point of the spline is the nearest, there are no points to the left
+            # And the second nearest point (to the right) has the second shortest distance
+            # points_distance is the distance between to bspline points closest to the point
+            # closest---right---o----o---...
+        if index == 0:
+            second_distance = np.linalg.norm(np.array(self.rvals[1]) - np.array(point))
+            points_distance = np.linalg.norm(
+                np.array(self.rvals[1]) - np.array(self.rvals[0])
+            )
+            second_t = self.dom[1]
+            # Same happens if the closest point is the last one on the spline
+            # ...---o---left---closest.
+        elif index == len(self.dom) - 1:
+            second_distance = np.linalg.norm(np.array(self.rvals[-2]) - np.array(point))
+            points_distance = np.linalg.norm(
+                np.array(self.rvals[-1]) - np.array(self.rvals[-2])
+            )
+            second_t = self.dom[-2]
+            # Otherwise, the closest bspline point to the point is somewhere on the curve
+        else:
+            left_point_distance = np.linalg.norm(
+                np.array(self.rvals[index - 1]) - np.array(point)
+            )
+            right_point_distance = np.linalg.norm(
+                np.array(self.rvals[index + 1]) - np.array(point)
+            )
+
+            r_right = [
+                self.rvals[index + 1][0] - point[0],
+                self.rvals[index + 1][1] - point[1],
+            ]
+            r_left = [
+                self.rvals[index - 1][0] - point[0],
+                self.rvals[index - 1][1] - point[1],
+            ]
+            r_min = [self.rvals[index][0] - point[0], self.rvals[index][1] - point[1]]
+            if np.dot(r_right, r_min) > 0:
+                second_distance = left_point_distance
+                second_t = self.dom[index - 1]
+                points_distance = np.linalg.norm(
+                    np.array(self.rvals[index - 1]) - np.array(closest_point)
+                )
+            else:
+                second_distance = right_point_distance
+                second_t = self.dom[index + 1]
+                points_distance = np.linalg.norm(
+                    np.array(self.rvals[index + 1]) - np.array(closest_point)
+                )
+
+        if np.fabs(second_distance + min_dist - points_distance) > self.tolerance:
+            not_online_error_str = str(
+                "The point "
+                + str(point)
+                + " is not on the lines segments, tolerance violated by "
+                + str(
+                    np.fabs(second_distance + min_dist - points_distance)
+                    / self.tolerance
+                )
+                + " times."
+            )
+            raise ValueError(not_online_error_str)
+        else:
+            t_interpolated = (
+                t * second_distance / points_distance
+                + second_t * min_dist / points_distance
+            )
+
+        self.point_to_t_dict[point] = t_interpolated
+
+        return t_interpolated
 

@@ -163,7 +163,7 @@ class CoreBspline:
         if isinstance(expression, list):
             n = len(expression)
             for r in domain:
-                val = np.array([expression[i][r] for i in range(n)])
+                val = [expression[i][r] for i in range(n)]
                 expression_val.append(val)
         elif isinstance(expression, ALexpression):
             for r in domain:
@@ -200,8 +200,8 @@ class CoreBspline:
                 closest_point = r
             previous_distance = current_distance
 
+
         index = self.rvals.index(closest_point)
-        index = np.where(self.rvals == closest_point)
         t = self.dom[index]
 
         # If we are 'very' close to an existing point, we just return t
@@ -316,10 +316,16 @@ class Bspline(CoreBspline):
             linetype,
             color=kwargs.get("color", "black"),
         )
-        # self.plot_cv(window)
+        self.plot_cv(window)
         show = kwargs.get("show", True)
         if show:
             window.show()
+
+    def plot_cv(self, window=plt):
+
+        window.plot(
+            self.cv[:, 0], self.cv[:, 1], "o", markersize=4, c="black", mfc="none"
+        )
 
     def normalize_points(self, n):
 
@@ -344,10 +350,8 @@ class Bspline(CoreBspline):
             if _tmp_dist < avgDistance:
                 _tmp_dist += (
                     sum(
-                        [
-                            (self.rvals[i][j] - self.rvals[i - 1][j]) ** 2.0
-                            for j in range(self.space_dimension)
-                        ]
+                        (self.rvals[i][j] - self.rvals[i - 1][j]) ** 2.0
+                        for j in range(self.space_dimension)
                     )
                 ) ** 0.5
             else:

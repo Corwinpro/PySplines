@@ -7,4 +7,4 @@ if __name__ == "__main__":
     bspline.plot(linetype="o-", color="red", show=False)
 
     bspline = Example_BSpline(n=100, refine=True)
-    bspline.plot(linetype="o-")
+    bspline.plot(linetype="*-")

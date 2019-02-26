@@ -284,6 +284,9 @@ class CoreBspline:
         displacement = self.bspline_basis[controlPointNumber][t]
         return [displacement for i in range(self.space_dimension)]
 
+    def expression_from_point(self, expression, point):
+        raise NotImplementedError
+
 
 class Bspline(CoreBspline):
     def __init__(self, cv, degree=3, n=100, periodic=False, **kwargs):
@@ -424,3 +427,18 @@ class Bspline(CoreBspline):
         self.dom = proper_t_dist[::-1]
         self.bspline_getSurface()
         self.n = len(self.dom)
+
+    def normal(self):
+        raise NotImplementedError
+
+    def curvature(self):
+        raise NotImplementedError
+
+    def surface_area(self):
+        raise NotImplementedError
+
+    def mass_matrix(self):
+        raise NotImplementedError
+
+    def displacement(self):
+        raise NotImplementedError

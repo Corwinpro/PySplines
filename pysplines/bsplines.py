@@ -170,7 +170,7 @@ class sympy_Bspline:
     def get_displacement_from_point(self, point, controlPointNumber):
         t = self.get_t_from_point(point)
         displacement = self.bspline_basis[controlPointNumber][t]
-        return [displacement, displacement]
+        return [displacement for i in range(self.space_dimension)]
 
     def get_t_from_point(self, point):
         """
@@ -235,14 +235,15 @@ class sympy_Bspline:
             )
 
             r_right = [
-                self.rvals[index + 1][0] - point[0],
-                self.rvals[index + 1][1] - point[1],
+                self.rvals[index + 1][i] - point[i] for i in range(self.space_dimension)
             ]
             r_left = [
-                self.rvals[index - 1][0] - point[0],
-                self.rvals[index - 1][1] - point[1],
+                self.rvals[index - 1][i] - point[i] for i in range(self.space_dimension)
             ]
-            r_min = [self.rvals[index][0] - point[0], self.rvals[index][1] - point[1]]
+            r_min = [
+                self.rvals[index][i] - point[i] for i in range(self.space_dimension)
+            ]
+
             if np.dot(r_right, r_min) > 0:
                 second_distance = left_point_distance
                 second_t = self.dom[index - 1]
@@ -257,14 +258,14 @@ class sympy_Bspline:
                 )
 
         if np.fabs(second_distance + min_dist - points_distance) > self.tolerance:
-            not_online_error = "The point {} is not on the lines segments, tolerance violated by {} times.\nThe distances are {}, {}, {}.".format(
+            not_on_line_error = "The point {} is not on the lines segments, tolerance violated by {} times.\nThe distances are {}, {}, {}.".format(
                 point,
                 np.fabs(second_distance + min_dist - points_distance) / self.tolerance,
                 second_distance,
                 min_dist,
                 points_distance,
             )
-            raise ValueError(not_online_error)
+            raise ValueError(not_on_line_error)
         else:
             t_interpolated = (
                 t * second_distance / points_distance

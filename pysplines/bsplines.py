@@ -1,6 +1,7 @@
 """
 TODO:
     - We should use sympy points (vectors) for sympy_Bspline.cv instead of floats
+    - Should I make ALexpression a function with attributes instead of a class?
 """
 import numpy as np
 import sympy
@@ -34,8 +35,26 @@ class ALexpression:
     def __getitem__(self, t):
         return self.lform(t)
 
+    def __mul__(self, other):
+        if isinstance(other, ALexpression):
+            return ALexpression(self.aform * other.aform)
+        else:
+            raise ValueError("int, float value or Parameter is required")
 
-class sympy_Bspline:
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __add__(self, other):
+        if isinstance(other, ALexpression):
+            return ALexpression(self.aform + other.aform)
+        else:
+            raise ValueError("int, float value or Parameter is required")
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+
+class CoreBspline:
     def __init__(self, cv, degree=3, n=100, periodic=False):
         """
             Clamped B-Spline with sympy
@@ -115,9 +134,9 @@ class sympy_Bspline:
             ALexpression(bspline_expression[i]) for i in range(self.space_dimension)
         ]
 
-    def bspline_getSurface(self):
+    def bspline_getSurface(self, domain=None):
 
-        self.rvals = self.evaluate_expression(self.bspline)
+        self.rvals = self.evaluate_expression(self.bspline, domain=domain)
 
         for i in range(len(self.rvals)):
             self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
@@ -126,7 +145,7 @@ class sympy_Bspline:
                     math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
                 )
 
-    def evaluate_expression(self, expression, point=None):
+    def evaluate_expression(self, expression, point=None, domain=None):
         """
         Given a sympy expression, a point (or set of points), calculates
         values of the expression at the point(s).
@@ -135,9 +154,9 @@ class sympy_Bspline:
 
         TODO: check all possible usage cases
         """
-        if point is None:
+        if point is None and domain is None:
             domain = self.dom
-        else:
+        elif point is not None:
             domain = (point,)
 
         expression_val = []
@@ -154,23 +173,6 @@ class sympy_Bspline:
             raise NotImplementedError
 
         return expression_val
-
-    def plot(self, linetype="-", window=plt, **kwargs):
-
-        window.plot(
-            np.array(self.rvals)[:, 0],
-            np.array(self.rvals)[:, 1],
-            linetype,
-            color="black",
-            **kwargs
-        )
-        # self.plot_cv(window)
-        window.show()
-
-    def get_displacement_from_point(self, point, controlPointNumber):
-        t = self.get_t_from_point(point)
-        displacement = self.bspline_basis[controlPointNumber][t]
-        return [displacement for i in range(self.space_dimension)]
 
     def get_t_from_point(self, point):
         """
@@ -276,3 +278,136 @@ class sympy_Bspline:
 
         return t_interpolated
 
+    def get_displacement_from_point(self, point, controlPointNumber):
+        t = self.get_t_from_point(point)
+        displacement = self.bspline_basis[controlPointNumber][t]
+        return [displacement for i in range(self.space_dimension)]
+
+
+class Bspline(CoreBspline):
+    def __init__(self, cv, degree=3, n=100, periodic=False, **kwargs):
+        super().__init__(cv, degree=degree, n=n, periodic=periodic)
+
+        self.bspline_derivative = self.construct_derivative(self.bspline, 1)
+
+        self.normalize_points(self.n)
+
+        self.is_bspline_refined = kwargs.get("refine", False)
+        if self.is_bspline_refined:
+            self.curvature_tolerance_angle = kwargs.get("angle_tolerance", 1.0e-2)
+            self.refine_curvature()
+
+    def construct_derivative(self, expression, order):
+
+        if isinstance(expression, list):
+            derivative = [self.construct_derivative(exp, order) for exp in expression]
+        elif isinstance(expression, ALexpression):
+            derivative = ALexpression(sympy.diff(expression.aform, self.x, order))
+        else:
+            raise NotImplementedError
+        return derivative
+
+    def plot(self, linetype="-", window=plt, **kwargs):
+
+        window.plot(
+            np.array(self.rvals)[:, 0],
+            np.array(self.rvals)[:, 1],
+            linetype,
+            color=kwargs.get("color", "black"),
+        )
+        # self.plot_cv(window)
+        show = kwargs.get("show", True)
+        if show:
+            window.show()
+
+    def normalize_points(self, n):
+
+        self.n = 3000
+        self.dom = np.linspace(0, self.max_param, self.n)
+        self.bspline_getSurface()
+        self.n = n
+
+        L = ALexpression(
+            sympy.sqrt(np.inner(self.bspline_derivative, self.bspline_derivative).aform)
+        )
+        L = self.evaluate_expression(L)
+
+        totalLength = simps(L, self.dom)
+        avgDistance = totalLength / n
+
+        _tmp_dist = 0.0
+        proper_t_dist = []
+        proper_t_dist.append(self.dom[0])
+
+        for i in range(1, len(self.dom) - 1):
+            if _tmp_dist < avgDistance:
+                _tmp_dist += (
+                    (self.rvals[i][0] - self.rvals[i - 1][0]) ** 2.0
+                    + (self.rvals[i][1] - self.rvals[i - 1][1]) ** 2.0
+                ) ** 0.5
+            else:
+                _tmp_dist = 0
+                proper_t_dist.append(self.dom[i])
+        proper_t_dist.append(self.dom[-1])
+
+        self.dom = proper_t_dist
+        self.bspline_getSurface()
+        self.n = len(self.dom)
+
+    def dots_angles(self, direction="forward"):
+        if direction == "backward":
+            # Move backwards on surface pointlist
+            x, y = np.array(self.rvals[::-1])[:, 0], np.array(self.rvals[::-1])[:, 1]
+        else:
+            # Else move as usual
+            x, y = np.array(self.rvals)[:, 0], np.array(self.rvals)[:, 1]
+
+        angles = []
+        for i in range(len(x) - 2):
+            v1_u = [x[i + 1] - x[i], y[i + 1] - y[i]]
+            v1_u /= np.linalg.norm(v1_u)
+            v2_u = [x[i + 2] - x[i], y[i + 2] - y[i]]
+            v2_u /= np.linalg.norm(v2_u)
+            angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+            angles.append(angle)
+
+        return angles
+
+    def refine_curvature(self):
+
+        tolerance_angle = self.curvature_tolerance_angle
+
+        proper_t_dist = []
+        proper_t_dist.append(self.dom[0])
+        angles = self.dots_angles()
+        tresh_angle = tolerance_angle
+        for i in range(len(self.dom) - 2):
+            if angles[i] ** 2.0 < tresh_angle ** 2.0:
+                proper_t_dist.append(self.dom[i + 1])
+            else:
+                n_insert_points = int(angles[i] / tresh_angle)
+                dt = (self.dom[i + 2] - self.dom[i + 1]) / n_insert_points
+                for j in range(n_insert_points):
+                    proper_t_dist.append(self.dom[i + 1] + j * dt)
+        proper_t_dist.append(self.dom[-1])
+        self.dom = proper_t_dist
+        self.bspline_getSurface()
+        self.n = len(self.dom)
+
+        proper_t_dist = []
+        proper_t_dist.append(self.dom[-1])
+        angles = self.dots_angles(direction="backward")[::-1]
+        tresh_angle = tolerance_angle
+        for i in range(len(self.dom) - 2):
+            k = -1 - i
+            if angles[k] ** 2.0 < tresh_angle ** 2.0:
+                proper_t_dist.append(self.dom[k - 1])
+            else:
+                n_insert_points = int(angles[k] / tresh_angle)
+                dt = (self.dom[k - 2] - self.dom[k - 1]) / n_insert_points
+                for j in range(n_insert_points):
+                    proper_t_dist.append(self.dom[k - 1] + j * dt)  # -j
+        proper_t_dist.append(self.dom[0])
+        self.dom = proper_t_dist[::-1]
+        self.bspline_getSurface()
+        self.n = len(self.dom)

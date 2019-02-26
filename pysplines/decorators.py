@@ -1,6 +1,7 @@
 import functools
 import time
 
+
 def timethis(func=None, *, n_iter=100):
     if func is None:
         return lambda f: timethis(f, n_iter=n_iter)

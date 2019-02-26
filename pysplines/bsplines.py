@@ -9,6 +9,12 @@ import math
 from scipy.integrate import simps
 import matplotlib.pyplot as plt
 import warnings
+import functools
+
+
+def is_numeric_argument(arg):
+    _is_numeric = isinstance(arg, (int, float))
+    return _is_numeric
 
 
 class ALexpression:
@@ -52,6 +58,25 @@ class ALexpression:
 
     def __radd__(self, other):
         return self.__add__(other)
+
+    def __truediv__(self, other):
+        if isinstance(other, ALexpression):
+            return ALexpression(self.aform / other.aform)
+        elif is_numeric_argument(other):
+            return ALexpression(self.aform / other)
+        else:
+            raise ValueError("int, float value or Parameter is required")
+
+    def __rtruediv__(self, other):
+        if isinstance(other, ALexpression):
+            return ALexpression(other.aform / self.aform)
+        elif is_numeric_argument(other):
+            return ALexpression(other / self.aform)
+        else:
+            raise ValueError("int, float value or Parameter is required")
+
+    def __neg__(self):
+        return ALexpression(-self.aform)
 
 
 class CoreBspline:
@@ -200,7 +225,6 @@ class CoreBspline:
                 closest_point = r
             previous_distance = current_distance
 
-
         index = self.rvals.index(closest_point)
         t = self.dom[index]
 
@@ -284,15 +308,16 @@ class CoreBspline:
         displacement = self.bspline_basis[controlPointNumber][t]
         return [displacement for i in range(self.space_dimension)]
 
-    def expression_from_point(self, expression, point):
-        raise NotImplementedError
-
 
 class Bspline(CoreBspline):
     def __init__(self, cv, degree=3, n=100, periodic=False, **kwargs):
         super().__init__(cv, degree=degree, n=n, periodic=periodic)
 
         self.bspline_derivative = self.construct_derivative(self.bspline, 1)
+        self.bspline_hessian = self.construct_derivative(self.bspline, 2)
+
+        # Generating line / surface properties
+        self.generate_surface_properties()
 
         self.normalize_points(self.n)
 
@@ -337,10 +362,7 @@ class Bspline(CoreBspline):
         self.bspline_getSurface()
         self.n = n
 
-        L = ALexpression(
-            sympy.sqrt(np.inner(self.bspline_derivative, self.bspline_derivative).aform)
-        )
-        L = self.evaluate_expression(L)
+        L = self.evaluate_expression(self.arc_length)
 
         totalLength = simps(L, self.dom)
         avgDistance = totalLength / n
@@ -428,11 +450,41 @@ class Bspline(CoreBspline):
         self.bspline_getSurface()
         self.n = len(self.dom)
 
+    def generate_surface_properties(self):
+        self.arc_length = self.arc_length()
+        self.normal = self.normal()
+        self.curvature = self.curvature()
+
+    def arc_length(self):
+        L = ALexpression(
+            sympy.sqrt(np.inner(self.bspline_derivative, self.bspline_derivative).aform)
+        )
+        return L
+
     def normal(self):
-        raise NotImplementedError
+        if self.space_dimension > 2:
+            warnings.warn(
+                "Only 2D version of {} is implemented. Current space dimension is {}".format(
+                    "normal", self.space_dimension
+                )
+            )
+        return [
+            -self.bspline_derivative[1] / self.arc_length,
+            self.bspline_derivative[0] / self.arc_length,
+        ]
 
     def curvature(self):
-        raise NotImplementedError
+        if self.space_dimension > 2:
+            warnings.warn(
+                "Only 2D version of {} is implemented. Current space dimension is {}".format(
+                    "normal", self.space_dimension
+                )
+            )
+        curvature = (
+            self.bspline_derivative[0].aform * self.bspline_hessian[1].aform
+            - self.bspline_derivative[1].aform * self.bspline_hessian[0].aform
+        ) / self.arc_length.aform ** 3.0
+        return ALexpression(curvature)
 
     def surface_area(self):
         raise NotImplementedError

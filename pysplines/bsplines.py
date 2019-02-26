@@ -143,13 +143,14 @@ class sympy_Bspline:
 
         return expression_val
 
-    def plot(self, linetype="-", window=plt):
+    def plot(self, linetype="-", window=plt, **kwargs):
 
         window.plot(
             np.array(self.rvals)[:, 0],
             np.array(self.rvals)[:, 1],
             linetype,
             color="black",
+            **kwargs
         )
         # self.plot_cv(window)
         window.show()
@@ -160,7 +161,16 @@ class sympy_Bspline:
         return [displacement, displacement]
 
     def get_t_from_point(self, point):
+        """
+        Given a point, we check if the point lies on the bspline, and what is 
+        the internal parameter 't' it corresponds to.
 
+        TODO:
+        - Now we only return t for points that are already on the existing lines.
+          However, this is not always correct - if the bspline discretization is 
+          too coarse, some of the real points won't be on the existing lines.
+          We need to check if the 'point' is actually near the point, predicted by 't'.
+        """
         point = tuple(point)
         if point in self.point_to_t_dict:
             return self.point_to_t_dict[point]
@@ -235,17 +245,14 @@ class sympy_Bspline:
                 )
 
         if np.fabs(second_distance + min_dist - points_distance) > self.tolerance:
-            not_online_error_str = str(
-                "The point "
-                + str(point)
-                + " is not on the lines segments, tolerance violated by "
-                + str(
-                    np.fabs(second_distance + min_dist - points_distance)
-                    / self.tolerance
-                )
-                + " times."
+            not_online_error = "The point {} is not on the lines segments, tolerance violated by {} times.\nThe distances are {}, {}, {}.".format(
+                point,
+                np.fabs(second_distance + min_dist - points_distance) / self.tolerance,
+                second_distance,
+                min_dist,
+                points_distance,
             )
-            raise ValueError(not_online_error_str)
+            raise ValueError(not_online_error)
         else:
             t_interpolated = (
                 t * second_distance / points_distance

@@ -1,3 +1,7 @@
+"""
+TODO:
+    - We should use sympy points (vectors) for sympy_Bspline.cv instead of floats
+"""
 import numpy as np
 import sympy
 import math
@@ -12,7 +16,7 @@ class ALexpression:
 
     Attributes:
     - aform: analytical sympy form of the expression
-    - lform: fully lambdified for of the expression
+    - lform: fully lambdified form of the expression
     """
 
     def __init__(self, sympy_expression):
@@ -86,11 +90,19 @@ class sympy_Bspline:
         return list(kv)
 
     def construct_bspline_basis(self):
-        bspline_basis = []
-        for i in range(len(self.cv)):
-            bspline_basis.append(
-                ALexpression(sympy.bspline_basis(self.degree, self.kv, i, self.x))
-            )
+        """
+         I multiply by 1.0 here for the following reason:
+         - without 1.0 * the bspline_basis[i].aform is type Piecewise
+         - with 1.0 * it is type <class 'sympy.core.mul.Mul'>
+         When I lambdify and evaluate expression it becomes
+         - np.ndarray() without multiplication
+         - np.float() with multiplication (which I need)
+         Is it a bug?
+        """
+        bspline_basis = [
+            ALexpression(1.0 * sympy.bspline_basis(self.degree, self.kv, i, self.x))
+            for i in range(len(self.cv))
+        ]
         return bspline_basis
 
     def construct_bspline_expression(self):

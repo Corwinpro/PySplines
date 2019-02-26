@@ -163,7 +163,7 @@ class CoreBspline:
         if isinstance(expression, list):
             n = len(expression)
             for r in domain:
-                val = [expression[i][r] for i in range(n)]
+                val = np.array([expression[i][r] for i in range(n)])
                 expression_val.append(val)
         elif isinstance(expression, ALexpression):
             for r in domain:
@@ -201,6 +201,7 @@ class CoreBspline:
             previous_distance = current_distance
 
         index = self.rvals.index(closest_point)
+        index = np.where(self.rvals == closest_point)
         t = self.dom[index]
 
         # If we are 'very' close to an existing point, we just return t
@@ -342,8 +343,12 @@ class Bspline(CoreBspline):
         for i in range(1, len(self.dom) - 1):
             if _tmp_dist < avgDistance:
                 _tmp_dist += (
-                    (self.rvals[i][0] - self.rvals[i - 1][0]) ** 2.0
-                    + (self.rvals[i][1] - self.rvals[i - 1][1]) ** 2.0
+                    sum(
+                        [
+                            (self.rvals[i][j] - self.rvals[i - 1][j]) ** 2.0
+                            for j in range(self.space_dimension)
+                        ]
+                    )
                 ) ** 0.5
             else:
                 _tmp_dist = 0
@@ -356,17 +361,21 @@ class Bspline(CoreBspline):
 
     def dots_angles(self, direction="forward"):
         if direction == "backward":
-            # Move backwards on surface pointlist
-            x, y = np.array(self.rvals[::-1])[:, 0], np.array(self.rvals[::-1])[:, 1]
+            # Move backwards along the surface pointlist
+            radius_vector = [
+                np.array(self.rvals)[::-1][:, i] for i in range(self.space_dimension)
+            ]
         else:
             # Else move as usual
-            x, y = np.array(self.rvals)[:, 0], np.array(self.rvals)[:, 1]
+            radius_vector = [
+                np.array(self.rvals)[:, i] for i in range(self.space_dimension)
+            ]
 
         angles = []
-        for i in range(len(x) - 2):
-            v1_u = [x[i + 1] - x[i], y[i + 1] - y[i]]
+        for i in range(len(self.rvals) - 2):
+            v1_u = [x[i + 1] - x[i] for x in radius_vector]
             v1_u /= np.linalg.norm(v1_u)
-            v2_u = [x[i + 2] - x[i], y[i + 2] - y[i]]
+            v2_u = [x[i + 2] - x[i] for x in radius_vector]
             v2_u /= np.linalg.norm(v2_u)
             angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
             angles.append(angle)
@@ -406,7 +415,7 @@ class Bspline(CoreBspline):
                 n_insert_points = int(angles[k] / tresh_angle)
                 dt = (self.dom[k - 2] - self.dom[k - 1]) / n_insert_points
                 for j in range(n_insert_points):
-                    proper_t_dist.append(self.dom[k - 1] + j * dt)  # -j
+                    proper_t_dist.append(self.dom[k - 1] + j * dt)
         proper_t_dist.append(self.dom[0])
         self.dom = proper_t_dist[::-1]
         self.bspline_getSurface()

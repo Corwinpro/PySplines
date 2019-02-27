@@ -12,7 +12,6 @@ Welcome to PySplines's documentation!
 
 .. include:: ../../README.rst
 
-::
 
 Indices and tables
 ==================

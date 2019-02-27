@@ -2,6 +2,7 @@
 TODO:
     - We should use sympy points (vectors) for sympy_Bspline.cv instead of floats
     - Should I make ALexpression a function with attributes instead of a class?
+    - Can we inheret all necessary arithmetic properties of ALexpression from sympy?
 """
 import numpy as np
 import sympy
@@ -65,7 +66,7 @@ class ALexpression:
         elif is_numeric_argument(other):
             return ALexpression(self.aform / other)
         else:
-            raise ValueError("int, float value or Parameter is required")
+            raise ValueError("int or float value is required. Current is {}".format(type(other)))
 
     def __rtruediv__(self, other):
         if isinstance(other, ALexpression):
@@ -73,7 +74,7 @@ class ALexpression:
         elif is_numeric_argument(other):
             return ALexpression(other / self.aform)
         else:
-            raise ValueError("int, float value or Parameter is required")
+            raise ValueError("int or float value is required. Current is {}".format(type(other)))
 
     def __neg__(self):
         return ALexpression(-self.aform)
@@ -362,7 +363,7 @@ class Bspline(CoreBspline):
         self.bspline_getSurface()
         self.n = n
 
-        L = self.evaluate_expression(self.arc_length)
+        L = self.arc_length()
 
         totalLength = simps(L, self.dom)
         avgDistance = totalLength / n
@@ -451,17 +452,18 @@ class Bspline(CoreBspline):
         self.n = len(self.dom)
 
     def generate_surface_properties(self):
-        self.arc_length = self.arc_length()
-        self.normal = self.normal()
-        self.curvature = self.curvature()
+        self._arc_length = self.generate_arc_length()
+        self._normal = self.generate_normal()
+        self._curvature = self.generate_curvature()
+        self._displacement = self.generate_displacements()
 
-    def arc_length(self):
+    def generate_arc_length(self):
         L = ALexpression(
             sympy.sqrt(np.inner(self.bspline_derivative, self.bspline_derivative).aform)
         )
         return L
 
-    def normal(self):
+    def generate_normal(self):
         if self.space_dimension > 2:
             warnings.warn(
                 "Only 2D version of {} is implemented. Current space dimension is {}".format(
@@ -469,11 +471,11 @@ class Bspline(CoreBspline):
                 )
             )
         return [
-            -self.bspline_derivative[1] / self.arc_length,
-            self.bspline_derivative[0] / self.arc_length,
+            -self.bspline_derivative[1] / self._arc_length,
+            self.bspline_derivative[0] / self._arc_length,
         ]
 
-    def curvature(self):
+    def generate_curvature(self):
         if self.space_dimension > 2:
             warnings.warn(
                 "Only 2D version of {} is implemented. Current space dimension is {}".format(
@@ -483,7 +485,7 @@ class Bspline(CoreBspline):
         curvature = (
             self.bspline_derivative[0].aform * self.bspline_hessian[1].aform
             - self.bspline_derivative[1].aform * self.bspline_hessian[0].aform
-        ) / self.arc_length.aform ** 3.0
+        ) / self._arc_length.aform ** 3.0
         return ALexpression(curvature)
 
     def surface_area(self):
@@ -492,5 +494,24 @@ class Bspline(CoreBspline):
     def mass_matrix(self):
         raise NotImplementedError
 
-    def displacement(self):
-        raise NotImplementedError
+    def generate_displacements(self):
+        displacements = []
+        for control_point_number in range(len(self.cv)):
+            cp_displacement = [
+                self.bspline_basis[control_point_number]
+                for i in range(self.space_dimension)
+            ]
+            displacements.append(cp_displacement)
+        return displacements
+
+    def arc_length(self, point=None):
+        return self.evaluate_expression(self._arc_length, point=point)
+
+    def normal(self, point=None):
+        return self.evaluate_expression(self._normal, point=point)
+
+    def curvature(self, point=None):
+        return self.evaluate_expression(self._curvature, point=point)
+
+    def displacement(self, point=None):
+        return self.evaluate_expression(self._displacement, point=point)

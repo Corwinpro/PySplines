@@ -1,3 +1,9 @@
+"""
+This demo illustrates the performance of a simple B-spline constructor.
+The bottleneck of the performance is the bspline_basis method, which
+solely relies on the sympy bspline basis generating method.
+"""
+
 from pysplines.example_bspline import Example_BSpline
 from pysplines.decorators import timethis
 

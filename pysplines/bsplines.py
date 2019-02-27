@@ -66,7 +66,9 @@ class ALexpression:
         elif is_numeric_argument(other):
             return ALexpression(self.aform / other)
         else:
-            raise ValueError("int or float value is required. Current is {}".format(type(other)))
+            raise ValueError(
+                "int or float value is required. Current is {}".format(type(other))
+            )
 
     def __rtruediv__(self, other):
         if isinstance(other, ALexpression):
@@ -74,7 +76,9 @@ class ALexpression:
         elif is_numeric_argument(other):
             return ALexpression(other / self.aform)
         else:
-            raise ValueError("int or float value is required. Current is {}".format(type(other)))
+            raise ValueError(
+                "int or float value is required. Current is {}".format(type(other))
+            )
 
     def __neg__(self):
         return ALexpression(-self.aform)
@@ -160,9 +164,9 @@ class CoreBspline:
             ALexpression(bspline_expression[i]) for i in range(self.space_dimension)
         ]
 
-    def bspline_getSurface(self, domain=None):
+    def bspline_getSurface(self, pointset=None):
 
-        self.rvals = self.evaluate_expression(self.bspline, domain=domain)
+        self.rvals = self.evaluate_expression(self.bspline, pointset=pointset)
 
         for i in range(len(self.rvals)):
             self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
@@ -171,7 +175,7 @@ class CoreBspline:
                     math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
                 )
 
-    def evaluate_expression(self, expression, point=None, domain=None):
+    def evaluate_expression(self, expression, point=None, pointset=None, *, t=None):
         """
         Given a sympy expression, a point (or set of points), calculates
         values of the expression at the point(s).
@@ -180,10 +184,14 @@ class CoreBspline:
 
         TODO: check all possible usage cases
         """
-        if point is None and domain is None:
+        if t is not None:
+            domain = (t,)
+        elif point is None and pointset is None:
             domain = self.dom
         elif point is not None:
-            domain = (point,)
+            domain = (self.get_t_from_point(point),)
+        elif pointset is not None:
+            domain = (self.get_t_from_point(point) for point in pointset)
 
         expression_val = []
         if isinstance(expression, list):
@@ -197,6 +205,9 @@ class CoreBspline:
                 expression_val.append(val)
         else:
             raise NotImplementedError
+
+        if len(expression_val) == 1:
+            expression_val = expression_val[0]
 
         return expression_val
 
@@ -303,11 +314,6 @@ class CoreBspline:
         self.point_to_t_dict[point] = t_interpolated
 
         return t_interpolated
-
-    def get_displacement_from_point(self, point, controlPointNumber):
-        t = self.get_t_from_point(point)
-        displacement = self.bspline_basis[controlPointNumber][t]
-        return [displacement for i in range(self.space_dimension)]
 
 
 class Bspline(CoreBspline):
@@ -488,11 +494,31 @@ class Bspline(CoreBspline):
         ) / self._arc_length.aform ** 3.0
         return ALexpression(curvature)
 
+    @property
     def surface_area(self):
-        raise NotImplementedError
+        y = np.array(self.rvals)[:, 1]
+        x_t = self.evaluate_expression(self.bspline_derivative[0])
+        surface_area = simps(y * x_t, self.dom)
+        return surface_area
 
-    def mass_matrix(self):
-        raise NotImplementedError
+    def mass_matrix(self, DLMM=False):
+        L = self.arc_length()
+
+        M = np.zeros((len(self.cv), len(self.cv)))
+        bspline_basis_eval = np.array(self.evaluate_expression(self.bspline_basis))
+
+        for i in range(len(self.cv)):
+            for j in range(len(self.cv)):
+                if i > j:
+                    M[i, j] = M[j, i]
+                else:
+                    if (DLMM and i == j) or not DLMM:
+                        M[i, j] = simps(
+                            bspline_basis_eval[:, i] * bspline_basis_eval[:, j] * L,
+                            self.dom,
+                        )
+
+        return M
 
     def generate_displacements(self):
         displacements = []
@@ -513,5 +539,10 @@ class Bspline(CoreBspline):
     def curvature(self, point=None):
         return self.evaluate_expression(self._curvature, point=point)
 
-    def displacement(self, point=None):
+    def displacement(self, point=None, control_point_number=None):
+        if control_point_number is not None:
+            return self.evaluate_expression(
+                self._displacement[control_point_number], point=point
+            )
+
         return self.evaluate_expression(self._displacement, point=point)

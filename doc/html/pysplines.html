@@ -1,0 +1,373 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="python3">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pysplines package &#8212; PySplines 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pysplines-package">
+<h1>pysplines package<a class="headerlink" href="#pysplines-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pysplines.alexpression">
+<span id="pysplines-alexpression-module"></span><h2>pysplines.alexpression module<a class="headerlink" href="#module-pysplines.alexpression" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pysplines.alexpression.ALexpression">
+<em class="property">class </em><code class="descclassname">pysplines.alexpression.</code><code class="descname">ALexpression</code><span class="sig-paren">(</span><em>sympy_expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/alexpression.html#ALexpression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.alexpression.ALexpression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A dual Analytical-Lambdified form expression of a single variable</p>
+<p>Attributes:
+- aform: analytical sympy form of the expression
+- lform: fully lambdified form of the expression</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysplines.alexpression.is_numeric_argument">
+<code class="descclassname">pysplines.alexpression.</code><code class="descname">is_numeric_argument</code><span class="sig-paren">(</span><em>arg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/alexpression.html#is_numeric_argument"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.alexpression.is_numeric_argument" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pysplines.bsplines">
+<span id="pysplines-bsplines-module"></span><h2>pysplines.bsplines module<a class="headerlink" href="#module-pysplines.bsplines" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>TODO:</dt>
+<dd><ul class="first last simple">
+<li>Currently only uniform knot vectors are implemented. Need to extend to non uniform case.</li>
+<li>We should use sympy points (vectors) for sympy_Bspline.cv instead of floats</li>
+<li>Should I make ALexpression a function with attributes instead of a class?</li>
+<li>Can we inheret all necessary arithmetic properties of ALexpression from sympy?</li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="pysplines.bsplines.Bspline">
+<em class="property">class </em><code class="descclassname">pysplines.bsplines.</code><code class="descname">Bspline</code><span class="sig-paren">(</span><em>cv</em>, <em>degree=3</em>, <em>n=100</em>, <em>periodic=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysplines.bsplines.CoreBspline" title="pysplines.bsplines.CoreBspline"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysplines.bsplines.CoreBspline</span></code></a></p>
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.arc_length">
+<code class="descname">arc_length</code><span class="sig-paren">(</span><em>point=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.arc_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.arc_length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.bspline_getSurface">
+<code class="descname">bspline_getSurface</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.bspline_getSurface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.bspline_getSurface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the (self.space_dimension) - dimensional B-spline surface over the full domain,
+stores the radius-vector values in self.rvals
+Truncates the coordinates up to the self.tolerance level.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.construct_derivative">
+<code class="descname">construct_derivative</code><span class="sig-paren">(</span><em>expression</em>, <em>order</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.construct_derivative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.construct_derivative" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.curvature">
+<code class="descname">curvature</code><span class="sig-paren">(</span><em>point=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.curvature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.curvature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.displacement">
+<code class="descname">displacement</code><span class="sig-paren">(</span><em>point=None</em>, <em>control_point_number=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.displacement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.displacement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.dots_angles">
+<code class="descname">dots_angles</code><span class="sig-paren">(</span><em>direction='forward'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.dots_angles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.dots_angles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterates through the self.rvals points in the given direction and calculates
+the angle between two vectors, v1 and v2:
+v1: (current point, next point)
+v2: (current point, after next point)</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>List of angles</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.generate_arc_length">
+<code class="descname">generate_arc_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.generate_arc_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.generate_arc_length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.generate_curvature">
+<code class="descname">generate_curvature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.generate_curvature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.generate_curvature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.generate_displacements">
+<code class="descname">generate_displacements</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.generate_displacements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.generate_displacements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates ALexpression for B-spline displacement with respect to control points</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.generate_normal">
+<code class="descname">generate_normal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.generate_normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.generate_normal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.generate_surface_properties">
+<code class="descname">generate_surface_properties</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.generate_surface_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.generate_surface_properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.mass_matrix">
+<code class="descname">mass_matrix</code><span class="sig-paren">(</span><em>DLMM=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.mass_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.mass_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mass matrix M measures how much the B-spline basis functions overlap.
+M_{ij} = int dl(t) B_i(t) B_j(t)</p>
+<p>We can reduce the mass matrix to a Diagonally Lumped Mass Matrix (DLMM).
+Then only the diagonal elements appear.</p>
+<p>We use the mass matrix to correct the gradients with respect to control 
+points positions, i.e. map the discrete gradient vector to the parameter-independent
+case. Read about it here: <a class="reference external" href="http://dx.doi.org/10.1016/j.cad.2016.06.002">http://dx.doi.org/10.1016/j.cad.2016.06.002</a></p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Mass Matrix</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.normal">
+<code class="descname">normal</code><span class="sig-paren">(</span><em>point=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.normal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.normalize_points">
+<code class="descname">normalize_points</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.normalize_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.normalize_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstructs the distribution of the internal parameter t in self.dom which corresponds to
+a uniform distribution of the physical points.</p>
+<p>When the internal parameter t of a B-spline is uniformly distributed (from 0 to 1),
+it doesn't presume the physical points are distributed uniformly along the surface.
+First, we generate a very fine discretization of the B-spline we have with 3000 points,
+and then remove the points until they are distributed uniformly, and their number (almost)
+equals to the user specified number.</p>
+<dl class="docutils">
+<dt>TODO:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>Find a way to estimate the minimum necessary number of points on the surface,</dt>
+<dd>when we construct the fine discretization.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>linetype='-'</em>, <em>window=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.plot_cv">
+<code class="descname">plot_cv</code><span class="sig-paren">(</span><em>window=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.plot_cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.plot_cv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.refine_curvature">
+<code class="descname">refine_curvature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.refine_curvature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.refine_curvature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Some of the B-spline parts can be underresolved, which yields sharp corners
+in the high-curvature regions. 
+We refine the surface such that the three consecutive points (1,2,3) lie 
+almost on the same line, such that the angle((2,1), (2,3)) le self.curvature_tolerance_angle.
+We iterate and refine the surface both in the forward and backwards directions.</p>
+<p>This method will increase the number of points on the surface.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysplines.bsplines.Bspline.surface_area">
+<code class="descname">surface_area</code><a class="headerlink" href="#pysplines.bsplines.Bspline.surface_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the area under the B-spline curve.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysplines.bsplines.CoreBspline">
+<em class="property">class </em><code class="descclassname">pysplines.bsplines.</code><code class="descname">CoreBspline</code><span class="sig-paren">(</span><em>cv</em>, <em>degree=3</em>, <em>n=100</em>, <em>periodic=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="pysplines.bsplines.CoreBspline.construct_bspline_basis">
+<code class="descname">construct_bspline_basis</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline.construct_bspline_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline.construct_bspline_basis" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns:</dt>
+<dd>list of B-spline basis functions in ALexpression format</dd>
+<dt>Bugs:</dt>
+<dd>I multiply by 1.0 here for the following reason:
+- without 1.0 * the bspline_basis[i].aform is type Piecewise
+- with 1.0 * it is type &lt;class 'sympy.core.mul.Mul'&gt;
+When I lambdify and evaluate expression it becomes
+- np.ndarray() without multiplication
+- np.float() with multiplication (which I need)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.CoreBspline.construct_bspline_expression">
+<code class="descname">construct_bspline_expression</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline.construct_bspline_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline.construct_bspline_expression" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns:</dt>
+<dd>N-dimensional list (N == self.space_dimension) of parametrized B-spline surface components</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.CoreBspline.evaluate_expression">
+<code class="descname">evaluate_expression</code><span class="sig-paren">(</span><em>expression</em>, <em>point=None</em>, <em>pointset=None</em>, <em>*</em>, <em>t=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline.evaluate_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline.evaluate_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an ALexpression expression, calculates numerical values of the expression.
+If a point in physical space is given, converts the point to internal parameter.
+If a set of points (pointset) is given, conversts the points to internal parameter.
+If a internal parameter t is given, calculates the numerical value straight away.</p>
+<dl class="docutils">
+<dt>Returns: </dt>
+<dd>List of the expression values.
+If there's only one element to return in list, return the element instead.
+(The last is the case when a point or t is given)</dd>
+</dl>
+<p>TODO: check all possible usage cases</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.CoreBspline.get_t_from_point">
+<code class="descname">get_t_from_point</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline.get_t_from_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline.get_t_from_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a point, we check if the point lies on the B-spline, 
+and what internal parameter 't' it corresponds to.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Interpolated value of t, such that B-spline(t) = point.</dd>
+</dl>
+<p>TODO:
+- Now we only return t for points that are already on the existing lines.</p>
+<blockquote>
+<div>However, this is not always correct - if the bspline discretization is 
+too coarse, some of the real points won't be on the existing lines.
+We need to check if the 'point' is actually near the point, predicted by 't'.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.CoreBspline.kv_bspline">
+<code class="descname">kv_bspline</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline.kv_bspline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline.kv_bspline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates knot vector of a uniform B-spline</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pysplines.decorators">
+<span id="pysplines-decorators-module"></span><h2>pysplines.decorators module<a class="headerlink" href="#module-pysplines.decorators" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pysplines.decorators.timethis">
+<code class="descclassname">pysplines.decorators.</code><code class="descname">timethis</code><span class="sig-paren">(</span><em>func=None</em>, <em>*</em>, <em>n_iter=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/decorators.html#timethis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.decorators.timethis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pysplines.example_bspline">
+<span id="pysplines-example-bspline-module"></span><h2>pysplines.example_bspline module<a class="headerlink" href="#module-pysplines.example_bspline" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pysplines.example_bspline.Example_BSpline">
+<em class="property">class </em><code class="descclassname">pysplines.example_bspline.</code><code class="descname">Example_BSpline</code><span class="sig-paren">(</span><em>degree=3</em>, <em>n=100</em>, <em>periodic=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/example_bspline.html#Example_BSpline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.example_bspline.Example_BSpline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysplines.bsplines.Bspline" title="pysplines.bsplines.Bspline"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysplines.bsplines.Bspline</span></code></a></p>
+<p>Example BSpline with degree d = 2, n = 100 plotted points, default periodic = False</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pysplines">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pysplines" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PySplines</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Petr Kungurtsev.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/pysplines.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

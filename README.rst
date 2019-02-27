@@ -1,4 +1,6 @@
-# PySplines
+========
+PySplines
+========
 
 Python / Sympy implementation of Uniform rational B-splines. 
 
@@ -12,19 +14,24 @@ The package focuses on:
     - Smoothness of the curve and uniformity of the points distribution along the curve
     - Fast access to the surface properties, especially when they are called multiple times
 
-Sphinx documentation available here: [http://petrkungurtsev.me/PySplines](http://petrkungurtsev.me/PySplines)
+Sphinx documentation available here: `http://petrkungurtsev.me/PySplines`__.
 
-## Demos
+.. __: http://petrkungurtsev.me/PySplines
 
-Please refer to the ```demo``` folder for some use cases.
+Demos
+-------------
 
-## Installation
+Please refer to the ``demo`` folder for some use cases.
+
+Installation
+-------------
 
 With pip:
 
-```bash
-git clone git@github.com:Corwinpro/PySplines.git
-cd bspline
-pip install --user -e .
-```
+.. code-block:: rst
+
+    git clone git@github.com:Corwinpro/PySplines.git
+    cd bspline
+    pip install --user -e .
+
 

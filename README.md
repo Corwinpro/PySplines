@@ -1,6 +1,6 @@
 # PySplines
 
-Python / Sympy implementation of Uniform rational B-splines.
+Python / Sympy implementation of Uniform rational B-splines. 
 
 The supposed usage of the PySplines is CAD-style parameter-based shape generation for meshes and shape optimization.
 
@@ -11,6 +11,8 @@ The package focuses on:
         (normals, curvature, displacement fields)
     - Smoothness of the curve and uniformity of the points distribution along the curve
     - Fast access to the surface properties, especially when they are called multiple times
+
+Sphinx documentation available here: [http://petrkungurtsev.me/PySplines](http://petrkungurtsev.me/PySplines)
 
 ## Demos
 

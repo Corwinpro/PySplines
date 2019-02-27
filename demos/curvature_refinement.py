@@ -1,3 +1,9 @@
+"""
+Example of curvature refinement procedure.
+We compare a coarse B-spilne (without refinement) to an adapted B-spline,
+with the second one being much smoother in the areas with high curvature.
+"""
+
 from pysplines.example_bspline import Example_BSpline
 import matplotlib.pyplot as plt
 

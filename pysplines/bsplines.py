@@ -40,7 +40,7 @@ class CoreBspline:
         self.dom = np.linspace(0, self.max_param, self.n)
 
         self.point_to_t_dict = dict()
-        self.tolerance = 1.0e-8
+        self.tolerance = 1.0e-6
 
         self.bspline_basis = self.construct_bspline_basis()
         self.bspline = self.construct_bspline_expression()

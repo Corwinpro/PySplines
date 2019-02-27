@@ -1,3 +1,16 @@
+"""
+Basic usage of pysplines
+Create and plot and example B-spline with given control points cv and of degree 3.
+    cv = [
+        [0.0, 0.0],
+        [0.1, 0.1],
+        [0.2, -0.1],
+        [0.3, 0.2],
+        [0.4, 0.0],
+        [0.5, 0.1]
+    ]
+"""
+
 from pysplines.example_bspline import Example_BSpline
 
 

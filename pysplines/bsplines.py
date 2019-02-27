@@ -17,7 +17,7 @@ from pysplines.alexpression import ALexpression
 class CoreBspline:
     def __init__(self, cv, degree=3, n=100, periodic=False):
         """
-            Clamped B-Spline with sympy
+            Clamped B-Spline with sympy: Core class
 
             space_dimension: problem dimension (2D only)
             cv: control points vector
@@ -44,7 +44,7 @@ class CoreBspline:
 
         self.bspline_basis = self.construct_bspline_basis()
         self.bspline = self.construct_bspline_expression()
-        self.bspline_getSurface()
+        # self.bspline_getSurface()
 
     def kv_bspline(self):
         """ 
@@ -100,21 +100,6 @@ class CoreBspline:
         return [
             ALexpression(bspline_expression[i]) for i in range(self.space_dimension)
         ]
-
-    def bspline_getSurface(self):
-        """
-        Evaluates the (self.space_dimension) - dimensional B-spline surface over the full domain,
-        stores the radius-vector values in self.rvals
-        Truncates the coordinates up to the self.tolerance level.            
-        """
-        self.rvals = self.evaluate_expression(self.bspline)
-
-        for i in range(len(self.rvals)):
-            self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
-            for j in range(self.space_dimension):
-                self.rvals[i][j] = (
-                    math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
-                )
 
     def evaluate_expression(self, expression, point=None, pointset=None, *, t=None):
         """
@@ -311,6 +296,21 @@ class Bspline(CoreBspline):
             self.cv[:, 0], self.cv[:, 1], "o", markersize=4, c="black", mfc="none"
         )
 
+    def bspline_getSurface(self):
+        """
+        Evaluates the (self.space_dimension) - dimensional B-spline surface over the full domain,
+        stores the radius-vector values in self.rvals
+        Truncates the coordinates up to the self.tolerance level.            
+        """
+        self.rvals = self.evaluate_expression(self.bspline)
+
+        for i in range(len(self.rvals)):
+            self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
+            for j in range(self.space_dimension):
+                self.rvals[i][j] = (
+                    math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
+                )
+
     def normalize_points(self, n):
         """
         Reconstructs the distribution of the internal parameter t in self.dom which corresponds to
@@ -406,7 +406,7 @@ class Bspline(CoreBspline):
         angles = self.dots_angles()
         tresh_angle = tolerance_angle
         for i in range(len(self.dom) - 2):
-            if angles[i] ** 2.0 < tresh_angle ** 2.0:
+            if abs(angles[i]) < abs(tresh_angle):
                 proper_t_dist.append(self.dom[i + 1])
             else:
                 n_insert_points = int(angles[i] / tresh_angle)
@@ -424,7 +424,7 @@ class Bspline(CoreBspline):
         tresh_angle = tolerance_angle
         for i in range(len(self.dom) - 2):
             k = -1 - i
-            if angles[k] ** 2.0 < tresh_angle ** 2.0:
+            if abs(angles[k]) < abs(tresh_angle):
                 proper_t_dist.append(self.dom[k - 1])
             else:
                 n_insert_points = int(angles[k] / tresh_angle)
@@ -475,6 +475,9 @@ class Bspline(CoreBspline):
 
     @property
     def surface_area(self):
+        """
+        Returns the area under the B-spline curve.
+        """
         y = np.array(self.rvals)[:, 1]
         x_t = self.evaluate_expression(self.bspline_derivative[0])
         surface_area = simps(y * x_t, self.dom)

@@ -1,5 +1,6 @@
 """
 TODO:
+    - Currently only uniform knot vectors are implemented. Need to extend to non uniform case.
     - We should use sympy points (vectors) for sympy_Bspline.cv instead of floats
     - Should I make ALexpression a function with attributes instead of a class?
     - Can we inheret all necessary arithmetic properties of ALexpression from sympy?
@@ -118,7 +119,7 @@ class CoreBspline:
 
     def kv_bspline(self):
         """ 
-            Calculates knot vector of a bspline
+            Calculates knot vector of a uniform B-spline
         """
         cv = np.asarray(self.cv)
         count = cv.shape[0]
@@ -140,13 +141,16 @@ class CoreBspline:
 
     def construct_bspline_basis(self):
         """
-         I multiply by 1.0 here for the following reason:
-         - without 1.0 * the bspline_basis[i].aform is type Piecewise
-         - with 1.0 * it is type <class 'sympy.core.mul.Mul'>
-         When I lambdify and evaluate expression it becomes
-         - np.ndarray() without multiplication
-         - np.float() with multiplication (which I need)
-         Is it a bug?
+        Returns:
+            list of B-spline basis functions in ALexpression format
+
+        Bugs:
+            I multiply by 1.0 here for the following reason:
+            - without 1.0 * the bspline_basis[i].aform is type Piecewise
+            - with 1.0 * it is type <class 'sympy.core.mul.Mul'>
+            When I lambdify and evaluate expression it becomes
+            - np.ndarray() without multiplication
+            - np.float() with multiplication (which I need)
         """
         bspline_basis = [
             ALexpression(1.0 * sympy.bspline_basis(self.degree, self.kv, i, self.x))
@@ -155,6 +159,10 @@ class CoreBspline:
         return bspline_basis
 
     def construct_bspline_expression(self):
+        """
+        Returns:
+            N-dimensional list (N == self.space_dimension) of parametrized B-spline surface components
+        """
         bspline_expression = [0] * self.space_dimension
 
         for i in range(len(self.cv)):
@@ -164,9 +172,13 @@ class CoreBspline:
             ALexpression(bspline_expression[i]) for i in range(self.space_dimension)
         ]
 
-    def bspline_getSurface(self, pointset=None):
-
-        self.rvals = self.evaluate_expression(self.bspline, pointset=pointset)
+    def bspline_getSurface(self):
+        """
+        Evaluates the (self.space_dimension) - dimensional B-spline surface over the full domain,
+        stores the radius-vector values in self.rvals
+        Truncates the coordinates up to the self.tolerance level.            
+        """
+        self.rvals = self.evaluate_expression(self.bspline)
 
         for i in range(len(self.rvals)):
             self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
@@ -177,10 +189,15 @@ class CoreBspline:
 
     def evaluate_expression(self, expression, point=None, pointset=None, *, t=None):
         """
-        Given a sympy expression, a point (or set of points), calculates
-        values of the expression at the point(s).
+        Given an ALexpression expression, calculates numerical values of the expression.
+        If a point in physical space is given, converts the point to internal parameter.
+        If a set of points (pointset) is given, conversts the points to internal parameter.
+        If a internal parameter t is given, calculates the numerical value straight away.
 
-        Returns: a list of the expression values
+        Returns: 
+            List of the expression values.
+            If there's only one element to return in list, return the element instead.
+            (The last is the case when a point or t is given)
 
         TODO: check all possible usage cases
         """
@@ -213,8 +230,11 @@ class CoreBspline:
 
     def get_t_from_point(self, point):
         """
-        Given a point, we check if the point lies on the bspline, and what is 
-        the internal parameter 't' it corresponds to.
+        Given a point, we check if the point lies on the B-spline, 
+        and what internal parameter 't' it corresponds to.
+
+        Returns:
+            Interpolated value of t, such that B-spline(t) = point.
 
         TODO:
         - Now we only return t for points that are already on the existing lines.
@@ -363,7 +383,20 @@ class Bspline(CoreBspline):
         )
 
     def normalize_points(self, n):
+        """
+        Reconstructs the distribution of the internal parameter t in self.dom which corresponds to
+        a uniform distribution of the physical points.
 
+        When the internal parameter t of a B-spline is uniformly distributed (from 0 to 1),
+        it doesn't presume the physical points are distributed uniformly along the surface.
+        First, we generate a very fine discretization of the B-spline we have with 3000 points,
+        and then remove the points until they are distributed uniformly, and their number (almost)
+        equals to the user specified number.
+
+        TODO:
+            - Find a way to estimate the minimum necessary number of points on the surface,
+                when we construct the fine discretization.
+        """
         self.n = 3000
         self.dom = np.linspace(0, self.max_param, self.n)
         self.bspline_getSurface()
@@ -396,6 +429,15 @@ class Bspline(CoreBspline):
         self.n = len(self.dom)
 
     def dots_angles(self, direction="forward"):
+        """
+        Iterates through the self.rvals points in the given direction and calculates
+        the angle between two vectors, v1 and v2:
+        v1: (current point, next point)
+        v2: (current point, after next point)
+
+        Returns:
+            List of angles
+        """
         if direction == "backward":
             # Move backwards along the surface pointlist
             radius_vector = [
@@ -419,7 +461,15 @@ class Bspline(CoreBspline):
         return angles
 
     def refine_curvature(self):
+        """
+        Some of the B-spline parts can be underresolved, which yields sharp corners
+        in the high-curvature regions. 
+        We refine the surface such that the three consecutive points (1,2,3) lie 
+        almost on the same line, such that the angle((2,1), (2,3)) \le self.curvature_tolerance_angle.
+        We iterate and refine the surface both in the forward and backwards directions.
 
+        This method will increase the number of points on the surface.
+        """
         tolerance_angle = self.curvature_tolerance_angle
 
         proper_t_dist = []
@@ -502,6 +552,20 @@ class Bspline(CoreBspline):
         return surface_area
 
     def mass_matrix(self, DLMM=False):
+        """
+        Mass matrix M measures how much the B-spline basis functions overlap.
+        M_{ij} = \int dl(t) B_i(t) B_j(t)
+
+        We can reduce the mass matrix to a Diagonally Lumped Mass Matrix (DLMM).
+        Then only the diagonal elements appear.
+
+        We use the mass matrix to correct the gradients with respect to control 
+        points positions, i.e. map the discrete gradient vector to the parameter-independent
+        case. Read about it here: http://dx.doi.org/10.1016/j.cad.2016.06.002
+
+        Returns:
+            Mass Matrix
+        """
         L = self.arc_length()
 
         M = np.zeros((len(self.cv), len(self.cv)))
@@ -521,6 +585,9 @@ class Bspline(CoreBspline):
         return M
 
     def generate_displacements(self):
+        """
+        Generates ALexpression for B-spline displacement with respect to control points
+        """
         displacements = []
         for control_point_number in range(len(self.cv)):
             cp_displacement = [

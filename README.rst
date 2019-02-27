@@ -30,7 +30,7 @@ With pip:
 .. code-block:: rst
 
     git clone git@github.com:Corwinpro/PySplines.git
-    cd bspline
+    cd pysplines
     pip install --user -e .
 
 

@@ -277,8 +277,9 @@ class Bspline(CoreBspline):
             raise NotImplementedError
         return derivative
 
-    def plot(self, linetype="-", window=plt, **kwargs):
-
+    def plot(self, linetype="-", window=None, **kwargs):
+        if window is None:
+            window = plt
         window.plot(
             np.array(self.rvals)[:, 0],
             np.array(self.rvals)[:, 1],
@@ -290,8 +291,9 @@ class Bspline(CoreBspline):
         if show:
             window.show()
 
-    def plot_cv(self, window=plt):
-
+    def plot_cv(self, window=None):
+        if window is None:
+            window = plt
         window.plot(
             self.cv[:, 0], self.cv[:, 1], "o", markersize=4, c="black", mfc="none"
         )

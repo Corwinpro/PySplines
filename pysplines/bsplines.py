@@ -75,8 +75,8 @@ class CoreBspline:
 
         Bugs:
             I multiply by 1.0 here for the following reason:
-            - without 1.0 * the bspline_basis[i].aform is type Piecewise
-            - with 1.0 * it is type <class 'sympy.core.mul.Mul'>
+            - without '1.0 * ' the bspline_basis[i].aform is type Piecewise
+            - with '1.0 * ' it is type <class 'sympy.core.mul.Mul'>
             When I lambdify and evaluate expression it becomes
             - np.ndarray() without multiplication
             - np.float() with multiplication (which I need)

@@ -17,7 +17,7 @@ class ALexpression:
     """
 
     def __init__(self, sympy_expression):
-        self.aform = sympy_expression
+        self.aform = sympy.simplify(sympy_expression)
         self.t = sympy_expression.free_symbols
         if len(self.t) > 1:
             warnings.warn(
@@ -71,3 +71,13 @@ class ALexpression:
 
     def __neg__(self):
         return ALexpression(-self.aform)
+
+    def __eq__(self, value):
+        if isinstance(value, ALexpression):
+            return self.aform == value.aform
+        elif isinstance(value, sympy.Expr):
+            return self.aform == sympy.simplify(value)
+        elif is_numeric_argument(value):
+            return self.aform == value
+        else:
+            return ValueError("Only ALexpression or Sympy expressions or numerical arguments can be compared")

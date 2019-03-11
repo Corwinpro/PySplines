@@ -26,6 +26,14 @@ class TestALexpression(unittest.TestCase):
 
         self.assertEqual((al_expression_1 + al_expression_2)[1], 0)
 
+    def test_negative(self):
+        x = sympy.var("x")
+        expression_1 = x ** 2 + 3 * x - 4
+        al_expression_1 = ALexpression(expression_1)
+
+        self.assertEqual((-al_expression_1)[1], 0)
+        self.assertEqual(-al_expression_1 + (x ** 2 + 3 * x - 4), 0)
+
     def test_divmult(self):
         x = sympy.var("x")
         expression_1 = x ** 2 + 3 * x - 4

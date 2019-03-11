@@ -34,6 +34,8 @@ class ALexpression:
     def __mul__(self, other):
         if isinstance(other, ALexpression):
             return ALexpression(self.aform * other.aform)
+        elif isinstance(other, sympy.Expr):
+            return ALexpression(self.aform * other)
         else:
             raise ValueError("int, float value or Parameter is required")
 
@@ -43,6 +45,8 @@ class ALexpression:
     def __add__(self, other):
         if isinstance(other, ALexpression):
             return ALexpression(self.aform + other.aform)
+        elif isinstance(other, sympy.Expr):
+            return ALexpression(self.aform + other)
         else:
             raise ValueError("int, float value or Parameter is required")
 
@@ -54,6 +58,8 @@ class ALexpression:
             return ALexpression(self.aform / other.aform)
         elif is_numeric_argument(other):
             return ALexpression(self.aform / other)
+        elif isinstance(other, sympy.Expr):
+            return ALexpression(self.aform / other)
         else:
             raise ValueError(
                 "int or float value is required. Current is {}".format(type(other))
@@ -63,6 +69,8 @@ class ALexpression:
         if isinstance(other, ALexpression):
             return ALexpression(other.aform / self.aform)
         elif is_numeric_argument(other):
+            return ALexpression(other / self.aform)
+        elif isinstance(other, sympy.Expr):
             return ALexpression(other / self.aform)
         else:
             raise ValueError(

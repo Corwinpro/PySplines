@@ -7,7 +7,7 @@ def test_lform():
     x = sympy.var("x")
     expression = x ** 2 + 3 * x + 4
     al_expression = ALexpression(expression)
-    assert al_expression[2.0] == 14.0
+    assert al_expression(2.0) == 14.0
 
 
 def test_plus():
@@ -22,7 +22,7 @@ def test_plus():
 
     assert al_expression_1 + al_expression_2 == x ** 2 + 4 * x - 5
     assert al_expression_1 + al_expression_2 == al_expression_3
-    assert (al_expression_1 + al_expression_2)[1] == 0
+    assert (al_expression_1 + al_expression_2)(1) == 0
 
 
 def test_negative():
@@ -30,7 +30,7 @@ def test_negative():
     expression_1 = x ** 2 + 3 * x - 4
     al_expression_1 = ALexpression(expression_1)
 
-    assert (-al_expression_1)[1] == 0
+    assert (-al_expression_1)(1) == 0
     assert -al_expression_1 + (x ** 2 + 3 * x - 4) == 0
 
 
@@ -47,5 +47,5 @@ def test_divmult():
     assert al_expression_1 / al_expression_2 / al_expression_3 == 1
     assert al_expression_3 * al_expression_2 / al_expression_1 == 1
 
-    assert (al_expression_1 / al_expression_2)[1] == 5
-    assert (al_expression_3 * al_expression_2)[2] == 6
+    assert (al_expression_1 / al_expression_2)(1) == 5
+    assert (al_expression_3 * al_expression_2)(2) == 6

@@ -44,7 +44,6 @@ class CoreBspline:
 
         self.bspline_basis = self.construct_bspline_basis()
         self.bspline = self.construct_bspline_expression()
-        # self.bspline_getSurface()
 
     def kv_bspline(self):
         """ 
@@ -92,7 +91,7 @@ class CoreBspline:
         Returns:
             N-dimensional list (N == self.space_dimension) of parametrized B-spline surface components
         """
-        bspline_expression = [0] * self.space_dimension
+        bspline_expression = [0 for s in self.space_dimension]
 
         for i in range(len(self.cv)):
             for j in range(self.space_dimension):

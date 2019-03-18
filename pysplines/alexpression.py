@@ -29,7 +29,16 @@ class ALexpression:
         self.lform = sympy.lambdify(self.t, self.aform)
 
     def __getitem__(self, t):
-        return self.lform(t)
+        if is_numeric_argument(t):
+            return self.lform(t)
+        else:
+            TypeError("int or float value is required")
+
+    def __call__(self, t):
+        if is_numeric_argument(t):
+            return self.lform(t)
+        else:
+            TypeError("int or float value is required")
 
     def __mul__(self, other):
         if isinstance(other, ALexpression):
@@ -37,7 +46,7 @@ class ALexpression:
         elif isinstance(other, sympy.Expr):
             return ALexpression(self.aform * other)
         else:
-            raise ValueError("int, float value or Parameter is required")
+            raise TypeError("int, float value or ALexpression is required")
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -48,7 +57,7 @@ class ALexpression:
         elif isinstance(other, sympy.Expr):
             return ALexpression(self.aform + other)
         else:
-            raise ValueError("int, float value or Parameter is required")
+            raise TypeError("int, float value or ALexpression is required")
 
     def __radd__(self, other):
         return self.__add__(other)
@@ -61,8 +70,10 @@ class ALexpression:
         elif isinstance(other, sympy.Expr):
             return ALexpression(self.aform / other)
         else:
-            raise ValueError(
-                "int or float value is required. Current is {}".format(type(other))
+            raise TypeError(
+                "int, float value or ALexpression is required. Current is {}".format(
+                    type(other)
+                )
             )
 
     def __rtruediv__(self, other):
@@ -73,8 +84,10 @@ class ALexpression:
         elif isinstance(other, sympy.Expr):
             return ALexpression(other / self.aform)
         else:
-            raise ValueError(
-                "int or float value is required. Current is {}".format(type(other))
+            raise TypeError(
+                "int or float value or ALexpression is required. Current is {}".format(
+                    type(other)
+                )
             )
 
     def __neg__(self):
@@ -88,4 +101,6 @@ class ALexpression:
         elif is_numeric_argument(value):
             return self.aform == value
         else:
-            return ValueError("Only ALexpression or Sympy expressions or numerical arguments can be compared")
+            return TypeError(
+                "Only ALexpression or Sympy expressions or numerical arguments can be compared"
+            )

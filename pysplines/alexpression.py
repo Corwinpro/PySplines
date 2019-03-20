@@ -1,6 +1,6 @@
 import warnings
 import sympy
-
+import numpy
 
 def is_numeric_argument(arg):
     _is_numeric = isinstance(arg, (int, float))
@@ -30,13 +30,13 @@ class ALexpression:
 
     def __getitem__(self, t):
         if is_numeric_argument(t):
-            return self.lform(t)
+            return float(self.lform(t))
         else:
             TypeError("int or float value is required")
 
     def __call__(self, t):
         if is_numeric_argument(t):
-            return self.lform(t)
+            return float(self.lform(t))
         else:
             TypeError("int or float value is required")
 

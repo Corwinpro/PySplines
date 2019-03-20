@@ -12,6 +12,7 @@ from scipy.integrate import simps
 import matplotlib.pyplot as plt
 import warnings
 from pysplines.alexpression import ALexpression
+from pysplines.basis_functions import bspline_basis as sympy_bspline_basis
 
 
 class CoreBspline:
@@ -81,7 +82,9 @@ class CoreBspline:
             - np.float() with multiplication (which I need)
         """
         bspline_basis = [
-            ALexpression(1.0 * sympy.bspline_basis(self.degree, self.kv, i, self.x))
+            ALexpression(
+                1.0 * sympy_bspline_basis(self.degree, tuple(self.kv), i, self.x)
+            )
             for i in range(len(self.cv))
         ]
         return bspline_basis
@@ -91,7 +94,7 @@ class CoreBspline:
         Returns:
             N-dimensional list (N == self.space_dimension) of parametrized B-spline surface components
         """
-        bspline_expression = [0 for s in self.space_dimension]
+        bspline_expression = [0 for s in range(self.space_dimension)]
 
         for i in range(len(self.cv)):
             for j in range(self.space_dimension):
@@ -297,14 +300,13 @@ class Bspline(CoreBspline):
             self.cv[:, 0], self.cv[:, 1], "o", markersize=4, c="black", mfc="none"
         )
 
-    def bspline_getSurface(self):
+    def bspline_get_surface(self):
         """
         Evaluates the (self.space_dimension) - dimensional B-spline surface over the full domain,
         stores the radius-vector values in self.rvals
         Truncates the coordinates up to the self.tolerance level.            
         """
         self.rvals = self.evaluate_expression(self.bspline)
-
         for i in range(len(self.rvals)):
             self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
             for j in range(self.space_dimension):
@@ -329,7 +331,7 @@ class Bspline(CoreBspline):
         """
         self.n = 3000
         self.dom = np.linspace(0, self.max_param, self.n)
-        self.bspline_getSurface()
+        self.bspline_get_surface()
         self.n = n
 
         L = self.arc_length()
@@ -355,7 +357,7 @@ class Bspline(CoreBspline):
         proper_t_dist.append(self.dom[-1])
 
         self.dom = proper_t_dist
-        self.bspline_getSurface()
+        self.bspline_get_surface()
         self.n = len(self.dom)
 
     def dots_angles(self, direction="forward"):
@@ -395,11 +397,12 @@ class Bspline(CoreBspline):
         Some of the B-spline parts can be underresolved, which yields sharp corners
         in the high-curvature regions. 
         We refine the surface such that the three consecutive points (1,2,3) lie 
-        almost on the same line, such that the angle((2,1), (2,3)) \le self.curvature_tolerance_angle.
+        almost on the same line, such that the angle((2,1), (2,3)) <= self.curvature_tolerance_angle.
         We iterate and refine the surface both in the forward and backwards directions.
 
         This method will increase the number of points on the surface.
         """
+
         tolerance_angle = self.curvature_tolerance_angle
 
         proper_t_dist = []
@@ -416,7 +419,7 @@ class Bspline(CoreBspline):
                     proper_t_dist.append(self.dom[i + 1] + j * dt)
         proper_t_dist.append(self.dom[-1])
         self.dom = proper_t_dist
-        self.bspline_getSurface()
+        self.bspline_get_surface()
         self.n = len(self.dom)
 
         proper_t_dist = []
@@ -434,7 +437,7 @@ class Bspline(CoreBspline):
                     proper_t_dist.append(self.dom[k - 1] + j * dt)
         proper_t_dist.append(self.dom[0])
         self.dom = proper_t_dist[::-1]
-        self.bspline_getSurface()
+        self.bspline_get_surface()
         self.n = len(self.dom)
 
     def generate_surface_properties(self):
@@ -487,7 +490,7 @@ class Bspline(CoreBspline):
     def mass_matrix(self, DLMM=False):
         """
         Mass matrix M measures how much the B-spline basis functions overlap.
-        M_{ij} = \int dl(t) B_i(t) B_j(t)
+        M_{ij} = \ int dl(t) B_i(t) B_j(t)
 
         We can reduce the mass matrix to a Diagonally Lumped Mass Matrix (DLMM).
         Then only the diagonal elements appear.
@@ -499,6 +502,7 @@ class Bspline(CoreBspline):
         Returns:
             Mass Matrix
         """
+
         L = self.arc_length()
 
         M = np.zeros((len(self.cv), len(self.cv)))

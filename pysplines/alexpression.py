@@ -29,6 +29,13 @@ class ALexpression:
 
         self.lform = None
 
+    def __repr__(self):
+        is_lambdified = self.lform is not None
+        return "ALexpression({}, lambdified: {})".format(self.aform, is_lambdified)
+
+    def __str__(self):
+        return self.__repr__()
+
     def __call__(self, t):
         if is_numeric_argument(t):
             if self.lform is None:

@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import warnings
 from pysplines.alexpression import ALexpression
 from pysplines.basis_functions import bspline_basis as sympy_bspline_basis
+from pysplines.alexpression import is_numeric_argument
 
 
 class CoreBspline:
@@ -71,18 +72,10 @@ class CoreBspline:
         """
         Returns:
             list of B-spline basis functions in ALexpression format
-
-        Bugs:
-            I multiply by 1.0 here for the following reason:
-            - without '1.0 * ' the bspline_basis[i].aform is type Piecewise
-            - with '1.0 * ' it is type <class 'sympy.core.mul.Mul'>
-            When I lambdify and evaluate expression it becomes
-            - np.ndarray() without multiplication
-            - np.float() with multiplication (which I need)
         """
         bspline_basis = [
             ALexpression(
-                1.0 * sympy_bspline_basis(self.degree, tuple(self.kv), i, self.x)
+                sympy_bspline_basis(self.degree, tuple(self.kv), i, self.x)  # 1.0 *
             )
             for i in range(len(self.cv))
         ]
@@ -101,28 +94,23 @@ class CoreBspline:
             ALexpression(bspline_expression[i]) for i in range(self.space_dimension)
         ]
 
-    def evaluate_expression(self, expression, point=None, pointset=None, *, t=None):
+    def evaluate_expression(self, expression, domain=None):
         """
-        Given an ALexpression expression, calculates numerical values of the expression.
-        If a point in physical space is given, converts the point to internal parameter.
-        If a set of points (pointset) is given, conversts the points to internal parameter.
-        If a internal parameter t is given, calculates the numerical value straight away.
+        Given an ALexpression expression, calculates numerical values of the expression
+        at the domain points.
+        domain only refers to internal parameter, not the physical space points
+
+        : param domain: single value or a list of values to evaluate the expression at
 
         Returns: 
             List of the expression values.
             If there's only one element to return in list, return the element instead.
             (The last is the case when a point or t is given)
-
-        TODO: check all possible usage cases
         """
-        if t is not None:
-            domain = (t,)
-        elif point is None and pointset is None:
+        if is_numeric_argument(domain):
+            domain = (domain,)
+        elif domain is None:
             domain = self.dom
-        elif point is not None:
-            domain = (self.get_t_from_point(point),)
-        elif pointset is not None:
-            domain = (self.get_t_from_point(point) for point in pointset)
 
         expression_val = []
         if isinstance(expression, list):
@@ -141,6 +129,23 @@ class CoreBspline:
             expression_val = expression_val[0]
 
         return expression_val
+
+
+class Bspline(CoreBspline):
+    def __init__(self, cv, degree=3, n=100, periodic=False, **kwargs):
+        super().__init__(cv, degree=degree, n=n, periodic=periodic)
+
+        self.bspline_derivative = self.construct_derivative(self.bspline, 1)
+        self.bspline_hessian = self.construct_derivative(self.bspline, 2)
+
+        # Generating line / surface properties
+        self.generate_surface_properties()
+        self.normalize_points(self.n)
+
+        self.is_bspline_refined = kwargs.get("refine", False)
+        if self.is_bspline_refined:
+            self.curvature_tolerance_angle = kwargs.get("angle_tolerance", 1.0e-2)
+            self.refine_curvature()
 
     def get_t_from_point(self, point):
         """
@@ -249,22 +254,29 @@ class CoreBspline:
 
         return t_interpolated
 
+    def evaluate_expression(self, expression, point=None, pointset=None, *, t=None):
+        """
+        Given an ALexpression expression, calculates numerical values of the expression.
+        If a point in physical space is given, converts the point to internal parameter.
+        If a set of points (pointset) is given, conversts the points to internal parameter.
+        If a internal parameter t is given, calculates the numerical value straight away.
 
-class Bspline(CoreBspline):
-    def __init__(self, cv, degree=3, n=100, periodic=False, **kwargs):
-        super().__init__(cv, degree=degree, n=n, periodic=periodic)
+        Returns: 
+            List of the expression values.
+            If there's only one element to return in list, return the element instead.
+            (The last is the case when a point or t is given)
+        """
 
-        self.bspline_derivative = self.construct_derivative(self.bspline, 1)
-        self.bspline_hessian = self.construct_derivative(self.bspline, 2)
+        if t is not None:
+            domain = (t,)
+        elif point is None and pointset is None:
+            domain = self.dom
+        elif point is not None:
+            domain = (self.get_t_from_point(point),)
+        elif pointset is not None:
+            domain = (self.get_t_from_point(point) for point in pointset)
 
-        # Generating line / surface properties
-        self.generate_surface_properties()
-        self.normalize_points(self.n)
-
-        self.is_bspline_refined = kwargs.get("refine", False)
-        if self.is_bspline_refined:
-            self.curvature_tolerance_angle = kwargs.get("angle_tolerance", 1.0e-2)
-            self.refine_curvature()
+        return super().evaluate_expression(expression, domain=domain)
 
     def construct_derivative(self, expression, order):
 
@@ -487,7 +499,7 @@ class Bspline(CoreBspline):
     def mass_matrix(self, DLMM=False):
         """
         Mass matrix M measures how much the B-spline basis functions overlap.
-        M_{ij} = \ int dl(t) B_i(t) B_j(t)
+        M_{ij} = int dl(t) B_i(t) B_j(t)
 
         We can reduce the mass matrix to a Diagonally Lumped Mass Matrix (DLMM).
         Then only the diagonal elements appear.

@@ -82,6 +82,7 @@
   <h1>Source code for pysplines.alexpression</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">sympy</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
 
 
 <div class="viewcode-block" id="is_numeric_argument"><a class="viewcode-back" href="../../pysplines.html#pysplines.alexpression.is_numeric_argument">[docs]</a><span class="k">def</span> <span class="nf">is_numeric_argument</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
@@ -108,16 +109,31 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">lform</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">lambdify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lform</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lform</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">is_lambdified</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="s2">&quot;ALexpression(</span><span class="si">{}</span><span class="s2">, lambdified: </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">,</span> <span class="n">is_lambdified</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">is_numeric_argument</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lform</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lform</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">lambdify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lform</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;int or float value is required&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ALexpression</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">sympy</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">*</span> <span class="n">other</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;int, float value or Parameter is required&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;int, float value or ALexpression is required&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
@@ -125,8 +141,10 @@
     <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ALexpression</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">sympy</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">+</span> <span class="n">other</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;int, float value or Parameter is required&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;int, float value or ALexpression is required&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__add__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
@@ -136,9 +154,13 @@
             <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">/</span> <span class="n">other</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">is_numeric_argument</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">sympy</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;int or float value is required. Current is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;int, float value or ALexpression is required. Current is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
@@ -146,13 +168,43 @@
             <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">aform</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">is_numeric_argument</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="n">other</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">sympy</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="n">other</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;int or float value is required. Current is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;int or float value or ALexpression is required. Current is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">ALexpression</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ALexpression</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">==</span> <span class="n">value</span><span class="o">.</span><span class="n">aform</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">sympy</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">==</span> <span class="n">sympy</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_numeric_argument</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">==</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Only ALexpression or Sympy expressions or numerical arguments can be compared&quot;</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="ALexpression.simplify"><a class="viewcode-back" href="../../pysplines.html#pysplines.alexpression.ALexpression.simplify">[docs]</a>    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simplify the .aform</span>
+<span class="sd">        : param level: simplificatio level</span>
+<span class="sd">            level == 0: basic simplification through sympy.cancel. It performs </span>
+<span class="sd">            simple transformation that puts the expression into the standard </span>
+<span class="sd">            form p/q, which is much faster than a generic .simplify</span>
+<span class="sd">            level == 1: full simplification through sympy.simplify</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aform</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aform</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>

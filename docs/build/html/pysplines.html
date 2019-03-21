@@ -117,6 +117,18 @@
 <p>Attributes:
 - aform: analytical sympy form of the expression
 - lform: fully lambdified form of the expression</p>
+<dl class="method">
+<dt id="pysplines.alexpression.ALexpression.simplify">
+<code class="descname">simplify</code><span class="sig-paren">(</span><em>level=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/alexpression.html#ALexpression.simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.alexpression.ALexpression.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplify the .aform
+: param level: simplificatio level</p>
+<blockquote>
+<div>level == 0: basic simplification through sympy.cancel. It performs 
+simple transformation that puts the expression into the standard 
+form p/q, which is much faster than a generic .simplify
+level == 1: full simplification through sympy.simplify</div></blockquote>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -147,8 +159,8 @@
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pysplines.bsplines.Bspline.bspline_getSurface">
-<code class="descname">bspline_getSurface</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.bspline_getSurface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.bspline_getSurface" title="Permalink to this definition">¶</a></dt>
+<dt id="pysplines.bsplines.Bspline.bspline_get_surface">
+<code class="descname">bspline_get_surface</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.bspline_get_surface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.bspline_get_surface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the (self.space_dimension) - dimensional B-spline surface over the full domain,
 stores the radius-vector values in self.rvals
 Truncates the coordinates up to the self.tolerance level.</p>
@@ -183,6 +195,21 @@ v2: (current point, after next point)</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pysplines.bsplines.Bspline.evaluate_expression">
+<code class="descname">evaluate_expression</code><span class="sig-paren">(</span><em>expression</em>, <em>point=None</em>, <em>pointset=None</em>, <em>*</em>, <em>t=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.evaluate_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.evaluate_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an ALexpression expression, calculates numerical values of the expression.
+If a point in physical space is given, converts the point to internal parameter.
+If a set of points (pointset) is given, conversts the points to internal parameter.
+If a internal parameter t is given, calculates the numerical value straight away.</p>
+<dl class="docutils">
+<dt>Returns: </dt>
+<dd>List of the expression values.
+If there's only one element to return in list, return the element instead.
+(The last is the case when a point or t is given)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pysplines.bsplines.Bspline.generate_arc_length">
 <code class="descname">generate_arc_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.generate_arc_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.generate_arc_length" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -207,6 +234,23 @@ v2: (current point, after next point)</p>
 <dt id="pysplines.bsplines.Bspline.generate_surface_properties">
 <code class="descname">generate_surface_properties</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.generate_surface_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.generate_surface_properties" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="pysplines.bsplines.Bspline.get_t_from_point">
+<code class="descname">get_t_from_point</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#Bspline.get_t_from_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.Bspline.get_t_from_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a point, we check if the point lies on the B-spline, 
+and what internal parameter 't' it corresponds to.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Interpolated value of t, such that B-spline(t) = point.</dd>
+</dl>
+<p>TODO:
+- Now we only return t for points that are already on the existing lines.</p>
+<blockquote>
+<div>However, this is not always correct - if the bspline discretization is 
+too coarse, some of the real points won't be on the existing lines.
+We need to check if the 'point' is actually near the point, predicted by 't'.</div></blockquote>
+</dd></dl>
 
 <dl class="method">
 <dt id="pysplines.bsplines.Bspline.mass_matrix">
@@ -268,7 +312,7 @@ equals to the user specified number.</p>
 <dd><p>Some of the B-spline parts can be underresolved, which yields sharp corners
 in the high-curvature regions. 
 We refine the surface such that the three consecutive points (1,2,3) lie 
-almost on the same line, such that the angle((2,1), (2,3)) le self.curvature_tolerance_angle.
+almost on the same line, such that the angle((2,1), (2,3)) &lt;= self.curvature_tolerance_angle.
 We iterate and refine the surface both in the forward and backwards directions.</p>
 <p>This method will increase the number of points on the surface.</p>
 </dd></dl>
@@ -291,13 +335,6 @@ We iterate and refine the surface both in the forward and backwards directions.<
 <dd><dl class="docutils">
 <dt>Returns:</dt>
 <dd>list of B-spline basis functions in ALexpression format</dd>
-<dt>Bugs:</dt>
-<dd>I multiply by 1.0 here for the following reason:
-- without 1.0 * the bspline_basis[i].aform is type Piecewise
-- with 1.0 * it is type &lt;class 'sympy.core.mul.Mul'&gt;
-When I lambdify and evaluate expression it becomes
-- np.ndarray() without multiplication
-- np.float() with multiplication (which I need)</dd>
 </dl>
 </dd></dl>
 
@@ -312,35 +349,17 @@ When I lambdify and evaluate expression it becomes
 
 <dl class="method">
 <dt id="pysplines.bsplines.CoreBspline.evaluate_expression">
-<code class="descname">evaluate_expression</code><span class="sig-paren">(</span><em>expression</em>, <em>point=None</em>, <em>pointset=None</em>, <em>*</em>, <em>t=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline.evaluate_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline.evaluate_expression" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given an ALexpression expression, calculates numerical values of the expression.
-If a point in physical space is given, converts the point to internal parameter.
-If a set of points (pointset) is given, conversts the points to internal parameter.
-If a internal parameter t is given, calculates the numerical value straight away.</p>
+<code class="descname">evaluate_expression</code><span class="sig-paren">(</span><em>expression</em>, <em>domain=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline.evaluate_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline.evaluate_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an ALexpression expression, calculates numerical values of the expression
+at the domain points.
+domain only refers to internal parameter, not the physical space points</p>
+<p>: param domain: single value or a list of values to evaluate the expression at</p>
 <dl class="docutils">
 <dt>Returns: </dt>
 <dd>List of the expression values.
 If there's only one element to return in list, return the element instead.
 (The last is the case when a point or t is given)</dd>
 </dl>
-<p>TODO: check all possible usage cases</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysplines.bsplines.CoreBspline.get_t_from_point">
-<code class="descname">get_t_from_point</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysplines/bsplines.html#CoreBspline.get_t_from_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysplines.bsplines.CoreBspline.get_t_from_point" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a point, we check if the point lies on the B-spline, 
-and what internal parameter 't' it corresponds to.</p>
-<dl class="docutils">
-<dt>Returns:</dt>
-<dd>Interpolated value of t, such that B-spline(t) = point.</dd>
-</dl>
-<p>TODO:
-- Now we only return t for points that are already on the existing lines.</p>
-<blockquote>
-<div>However, this is not always correct - if the bspline discretization is 
-too coarse, some of the real points won't be on the existing lines.
-We need to check if the 'point' is actually near the point, predicted by 't'.</div></blockquote>
 </dd></dl>
 
 <dl class="method">

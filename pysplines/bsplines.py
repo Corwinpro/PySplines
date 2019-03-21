@@ -42,7 +42,6 @@ class CoreBspline:
 
         self.point_to_t_dict = dict()
         self.tolerance = 1.0e-6
-
         self.bspline_basis = self.construct_bspline_basis()
         self.bspline = self.construct_bspline_expression()
 
@@ -95,7 +94,6 @@ class CoreBspline:
             N-dimensional list (N == self.space_dimension) of parametrized B-spline surface components
         """
         bspline_expression = [0 for s in range(self.space_dimension)]
-
         for i in range(len(self.cv)):
             for j in range(self.space_dimension):
                 bspline_expression[j] += self.cv[i][j] * self.bspline_basis[i].aform
@@ -261,7 +259,6 @@ class Bspline(CoreBspline):
 
         # Generating line / surface properties
         self.generate_surface_properties()
-
         self.normalize_points(self.n)
 
         self.is_bspline_refined = kwargs.get("refine", False)

@@ -16,15 +16,15 @@ from functools import lru_cache
 def _add_splines(c, b1, d, b2):
     """Construct c*b1 + d*b2."""
     if b1 == S.Zero or c == S.Zero:
-        rv = piecewise_fold(d*b2)
+        rv = piecewise_fold(d * b2)
     elif b2 == S.Zero or d == S.Zero:
-        rv = piecewise_fold(c*b1)
+        rv = piecewise_fold(c * b1)
     else:
         new_args = []
         n_intervals = len(b1.args)
         # Just combining the Piecewise without any fancy optimization
-        p1 = piecewise_fold(c*b1)
-        p2 = piecewise_fold(d*b2)
+        p1 = piecewise_fold(c * b1)
+        p2 = piecewise_fold(d * b2)
 
         # Search all Piecewise arguments except (0, True)
         p2args = list(p2.args[:-1])
@@ -72,7 +72,7 @@ def _add_splines(c, b1, d, b2):
 
         # Add final (0, True)
         new_args.append((0, True))
-        
+
         rv = Piecewise(*new_args)
 
     return rv.expand()

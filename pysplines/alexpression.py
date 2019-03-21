@@ -2,6 +2,7 @@ import warnings
 import sympy
 import numpy
 
+
 def is_numeric_argument(arg):
     _is_numeric = isinstance(arg, (int, float))
     return _is_numeric
@@ -17,7 +18,7 @@ class ALexpression:
     """
 
     def __init__(self, sympy_expression):
-        self.aform = sympy.simplify(sympy_expression)
+        self.aform = sympy_expression  # sympy.simplify(sympy_expression)
         self.t = sympy_expression.free_symbols
         if len(self.t) > 1:
             warnings.warn(
@@ -26,16 +27,22 @@ class ALexpression:
                 )
             )
 
-        self.lform = sympy.lambdify(self.t, self.aform)
+        self.lform = None  # sympy.lambdify(self.t, self.aform)
 
     def __getitem__(self, t):
         if is_numeric_argument(t):
+            if self.lform is None:
+                self.aform = sympy.cancel(self.aform)
+                self.lform = sympy.lambdify(self.t, self.aform)
             return float(self.lform(t))
         else:
             TypeError("int or float value is required")
 
     def __call__(self, t):
         if is_numeric_argument(t):
+            if self.lform is None:
+                self.aform = sympy.cancel(self.aform)
+                self.lform = sympy.lambdify(self.t, self.aform)
             return float(self.lform(t))
         else:
             TypeError("int or float value is required")
@@ -104,3 +111,12 @@ class ALexpression:
             return TypeError(
                 "Only ALexpression or Sympy expressions or numerical arguments can be compared"
             )
+
+    def simplify(self):
+        """
+        We take the analytical form of the expression and make an assumption
+        it has a fraction form. sympy.cancel performs simple transformation
+        that puts the expression into the standard form p/q, which is much
+        faster than a generic .simplify
+        """
+        self.aform = sympy.cancel(self.aform)

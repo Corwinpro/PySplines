@@ -44,8 +44,13 @@ def test_divmult():
     al_expression_2 = ALexpression(expression_2)
     al_expression_3 = ALexpression(expression_3)
 
-    assert al_expression_1 / al_expression_2 / al_expression_3 == 1
-    assert al_expression_3 * al_expression_2 / al_expression_1 == 1
+    trivial_expression_1 = al_expression_1 / al_expression_2 / al_expression_3
+    trivial_expression_2 = al_expression_3 * al_expression_2 / al_expression_1
+    trivial_expression_1.simplify()
+    trivial_expression_2.simplify()
+
+    assert trivial_expression_1 == 1
+    assert trivial_expression_2 == 1
 
     assert (al_expression_1 / al_expression_2)(1) == 5
     assert (al_expression_3 * al_expression_2)(2) == 6

@@ -18,7 +18,7 @@ class ALexpression:
     """
 
     def __init__(self, sympy_expression):
-        self.aform = sympy_expression  # sympy.simplify(sympy_expression)
+        self.aform = sympy_expression
         self.t = sympy_expression.free_symbols
         if len(self.t) > 1:
             warnings.warn(
@@ -27,12 +27,12 @@ class ALexpression:
                 )
             )
 
-        self.lform = None  # sympy.lambdify(self.t, self.aform)
+        self.lform = None
 
     def __getitem__(self, t):
         if is_numeric_argument(t):
             if self.lform is None:
-                self.aform = sympy.cancel(self.aform)
+                self.simplify()
                 self.lform = sympy.lambdify(self.t, self.aform)
             return float(self.lform(t))
         else:
@@ -41,7 +41,7 @@ class ALexpression:
     def __call__(self, t):
         if is_numeric_argument(t):
             if self.lform is None:
-                self.aform = sympy.cancel(self.aform)
+                self.simplify()
                 self.lform = sympy.lambdify(self.t, self.aform)
             return float(self.lform(t))
         else:
@@ -112,11 +112,16 @@ class ALexpression:
                 "Only ALexpression or Sympy expressions or numerical arguments can be compared"
             )
 
-    def simplify(self):
+    def simplify(self, level=0):
         """
-        We take the analytical form of the expression and make an assumption
-        it has a fraction form. sympy.cancel performs simple transformation
-        that puts the expression into the standard form p/q, which is much
-        faster than a generic .simplify
+        Simplify the .aform
+        : param level: simplificatio level
+            level == 0: basic simplification through sympy.cancel. It performs 
+            simple transformation that puts the expression into the standard 
+            form p/q, which is much faster than a generic .simplify
+            level == 1: full simplification through sympy.simplify
         """
-        self.aform = sympy.cancel(self.aform)
+        if level == 0:
+            self.aform = sympy.cancel(self.aform)
+        elif level == 1:
+            self.aform = sympy.simplify(self.aform)

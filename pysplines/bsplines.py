@@ -128,11 +128,11 @@ class CoreBspline:
         if isinstance(expression, list):
             n = len(expression)
             for r in domain:
-                val = [expression[i][r] for i in range(n)]
+                val = [expression[i](r) for i in range(n)]
                 expression_val.append(val)
         elif isinstance(expression, ALexpression):
             for r in domain:
-                val = expression[r]
+                val = expression(r)
                 expression_val.append(val)
         else:
             raise NotImplementedError

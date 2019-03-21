@@ -29,15 +29,6 @@ class ALexpression:
 
         self.lform = None
 
-    def __getitem__(self, t):
-        if is_numeric_argument(t):
-            if self.lform is None:
-                self.simplify()
-                self.lform = sympy.lambdify(self.t, self.aform)
-            return float(self.lform(t))
-        else:
-            TypeError("int or float value is required")
-
     def __call__(self, t):
         if is_numeric_argument(t):
             if self.lform is None:

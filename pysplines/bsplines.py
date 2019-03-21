@@ -140,7 +140,10 @@ class Bspline(CoreBspline):
 
         # Generating line / surface properties
         self.generate_surface_properties()
-        self.normalize_points(self.n)
+        if kwargs.get("normalize_points", True):
+            self.normalize_points(self.n)
+        else:
+            self.bspline_get_surface()
 
         self.is_bspline_refined = kwargs.get("refine", False)
         if self.is_bspline_refined:

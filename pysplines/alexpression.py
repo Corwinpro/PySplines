@@ -19,6 +19,7 @@ class ALexpression:
 
     def __init__(self, sympy_expression):
         self.aform = sympy_expression
+        self.__initial_aform = sympy_expression
         self.t = sympy_expression.free_symbols
         if len(self.t) > 1:
             warnings.warn(
@@ -41,7 +42,16 @@ class ALexpression:
             if self.lform is None:
                 self.simplify()
                 self.lform = sympy.lambdify(self.t, self.aform)
-            return float(self.lform(t))
+            try:
+                value = self.lform(t)
+            except ValueError:
+                self.simplify(level=1)
+                self.lform = sympy.lambdify(self.t, self.aform)
+                try:
+                    value = self.lform(t)
+                except Exception as e:
+                    raise e
+            return float(value)
         else:
             TypeError("int or float value is required")
 
@@ -120,6 +130,6 @@ class ALexpression:
             level == 1: full simplification through sympy.simplify
         """
         if level == 0:
-            self.aform = sympy.cancel(self.aform)
+            self.aform = sympy.cancel(self.__initial_aform)
         elif level == 1:
-            self.aform = sympy.simplify(self.aform)
+            self.aform = sympy.simplify(self.__initial_aform)

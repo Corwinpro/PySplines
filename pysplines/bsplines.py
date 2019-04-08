@@ -41,7 +41,7 @@ class CoreBspline:
         self.kv = self.construct_knot_vector()
         self.dom = np.linspace(0, self.max_param, self.n)
 
-        self.point_to_t_dict = dict()
+        self.point_to_t_dict = {}
         self.tolerance = 1.0e-6
         self.bspline_basis = self.construct_bspline_basis()
         self.bspline = self.construct_bspline_expression()
@@ -320,6 +320,16 @@ class Bspline(CoreBspline):
                 self.rvals[i][j] = (
                     math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
                 )
+        if self.degree == 1:
+            self._insert_surface_points(self.cv)
+
+    def _insert_surface_points(self, point_list):
+        """
+        TODO:
+            For splines of degree 1, the spline passes through the control points.
+            Find an algorithm to insert the control points to the self.rvals list.
+        """
+        pass
 
     def normalize_points(self, n):
         """

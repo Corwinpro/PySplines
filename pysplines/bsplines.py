@@ -38,7 +38,7 @@ class CoreBspline:
         self.n = n
 
         self.max_param = self.cv.shape[0] - (self.degree * (1 - self.periodic))
-        self.kv = self.kv_bspline()
+        self.kv = self.construct_knot_vector()
         self.dom = np.linspace(0, self.max_param, self.n)
 
         self.point_to_t_dict = dict()
@@ -46,7 +46,7 @@ class CoreBspline:
         self.bspline_basis = self.construct_bspline_basis()
         self.bspline = self.construct_bspline_expression()
 
-    def kv_bspline(self):
+    def construct_knot_vector(self):
         """ 
             Calculates knot vector of a uniform B-spline
         """
@@ -168,19 +168,14 @@ class Bspline(CoreBspline):
         if point in self.point_to_t_dict:
             return self.point_to_t_dict[point]
 
-        min_dist = previous_distance = 1.0 / self.tolerance
+        distance_list = list(
+            map(lambda r: np.linalg.norm(np.array(r) - np.array(point)), self.rvals)
+        )
+        index = np.argmin(distance_list)
 
-        for r in self.rvals:
-            current_distance = np.linalg.norm(np.array(r) - np.array(point))
-            if current_distance > previous_distance:
-                continue
-            if current_distance < min_dist:
-                min_dist = current_distance
-                closest_point = r
-            previous_distance = current_distance
-
-        index = self.rvals.index(closest_point)
         t = self.dom[index]
+        min_dist = distance_list[index]
+        closest_point = self.rvals[index]
 
         # If we are 'very' close to an existing point, we just return t
         # This helps if a point is 'out of the domain' but still very close

@@ -7,7 +7,7 @@ class Example_BSpline(Bspline):
 	"""
 
     def __init__(self, degree=3, n=100, periodic=False, **kwargs):
-        top_control_points = [
+        control_points = [
             [0.0, 0.0],
             [0.1, 0.1],
             [0.2, -0.1],
@@ -15,7 +15,7 @@ class Example_BSpline(Bspline):
             [0.4, 0.0],
             [0.5, 0.1]
         ]
-        self.example_cv = top_control_points
+        self.example_cv = control_points
         super().__init__(
             self.example_cv, degree=degree, n=n, periodic=periodic, **kwargs
         )

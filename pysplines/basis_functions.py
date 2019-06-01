@@ -1,6 +1,7 @@
 """
 This is a fork from sympy implementation of bspline basis functions,
-when we fixed _add_splines summation functionality
+when we fixed _add_splines summation functionality. The initial problem
+is fixed in sympy 1.4, but for some reason the approach here works faster.
 """
 
 from __future__ import print_function, division
@@ -78,7 +79,7 @@ def _add_splines(c, b1, d, b2):
     return rv.expand()
 
 
-@lru_cache()
+@lru_cache(maxsize=128)
 def bspline_basis(d, knots, n, x):
     """The `n`-th B-spline at `x` of degree `d` with knots.
 

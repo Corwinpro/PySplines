@@ -12,8 +12,12 @@ from scipy.integrate import simps
 import matplotlib.pyplot as plt
 import warnings
 from pysplines.alexpression import ALexpression
-from pysplines.basis_functions import bspline_basis as sympy_bspline_basis
 from pysplines.alexpression import is_numeric_argument
+
+try:
+    from pysplines.basis_functions import bspline_basis as sympy_bspline_basis
+except ImportError:
+    from sympy.functions.special.bsplines import bspline_basis as sympy_bspline_basis
 
 
 class CoreBspline:

@@ -14,10 +14,10 @@ import warnings
 from pysplines.alexpression import ALexpression
 from pysplines.alexpression import is_numeric_argument
 
-try:
-    from pysplines.basis_functions import bspline_basis as sympy_bspline_basis
-except ImportError:
-    from sympy.functions.special.bsplines import bspline_basis as sympy_bspline_basis
+# try:
+#     from pysplines.basis_functions import bspline_basis as sympy_bspline_basis
+# except ImportError:
+from sympy.functions.special.bsplines import bspline_basis as sympy_bspline_basis
 
 
 class CoreBspline:
@@ -329,11 +329,33 @@ class Bspline(CoreBspline):
 
     def _insert_surface_points(self, point_list):
         """
-        TODO:
             For splines of degree 1, the spline passes through the control points.
-            Find an algorithm to insert the control points to the self.rvals list.
+            Naively iterate over all points and find proper places to add the control
+            points.
+            Mutates ``self.rvals``.
         """
-        pass
+
+        def collinear(p0, p1, p2):
+            x1, y1 = p1[0] - p0[0], p1[1] - p0[1]
+            x2, y2 = p2[0] - p0[0], p2[1] - p0[1]
+            return abs(x1 * y2 - x2 * y1) < 1e-12
+
+        vertices = [[_cv for _cv in cv] for cv in self.cv]
+        current_vertex_index = 1
+
+        rvals = [vertices[0]]
+        for rval_index, rval in enumerate(self.rvals[1:-1], start=1):
+            if not collinear(
+                    vertices[current_vertex_index - 1],
+                    vertices[current_vertex_index],
+                    rval
+            ):
+                rvals.append(vertices[current_vertex_index])
+                current_vertex_index += 1
+            rvals.append(rval)
+
+        rvals.append(vertices[-1])
+        self.rvals = rvals
 
     def normalize_points(self, n):
         """

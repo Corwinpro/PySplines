@@ -29,8 +29,6 @@ With pip:
 
 .. code-block:: rst
 
-    git clone git@github.com:Corwinpro/PySplines.git
-    cd pysplines
-    pip install --user -e .
+    python -m pip install pysplines
 
 

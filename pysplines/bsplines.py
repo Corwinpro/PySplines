@@ -321,9 +321,7 @@ class Bspline(CoreBspline):
         for i in range(len(self.rvals)):
             self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
             for j in range(self.space_dimension):
-                self.rvals[i][j] = (
-                    math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
-                )
+                self.rvals[i][j] = round(self.rvals[i][j], -int(math.log10(self.tolerance)))
         if self.degree == 1:
             self._insert_surface_points(self.cv)
 

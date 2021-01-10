@@ -20,7 +20,7 @@ class ALexpression:
     def __init__(self, sympy_expression):
         self.aform = sympy_expression
         self.__initial_aform = sympy_expression
-        self.t = sympy_expression.free_symbols
+        self.t = tuple(sympy_expression.free_symbols)
         if len(self.t) > 1:
             warnings.warn(
                 "Be careful with the lambdified expression {}, "

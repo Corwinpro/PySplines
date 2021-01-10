@@ -3,21 +3,18 @@ TODO:
     - Currently only uniform knot vectors are implemented. Need to extend to non uniform case.
     - We should use sympy points (vectors) for sympy_Bspline.cv instead of floats
     - Should I make ALexpression a function with attributes instead of a class?
-    - Can we inheret all necessary arithmetic properties of ALexpression from sympy?
+    - Can we inherit all necessary arithmetic properties of ALexpression from sympy?
 """
 import numpy as np
 import sympy
+from sympy.functions.special.bsplines import bspline_basis as sympy_bspline_basis
 import math
 from scipy.integrate import simps
 import matplotlib.pyplot as plt
 import warnings
+
 from pysplines.alexpression import ALexpression
 from pysplines.alexpression import is_numeric_argument
-
-# try:
-#     from pysplines.basis_functions import bspline_basis as sympy_bspline_basis
-# except ImportError:
-from sympy.functions.special.bsplines import bspline_basis as sympy_bspline_basis
 
 
 class CoreBspline:
@@ -238,14 +235,21 @@ class Bspline(CoreBspline):
                 )
 
         if np.fabs(second_distance + min_dist - points_distance) > self.tolerance:
-            not_on_line_error = "The point {} is not on the lines segments, tolerance violated by {} times.\nThe distances are {}, {}, {}.".format(
-                point,
-                np.fabs(second_distance + min_dist - points_distance) / self.tolerance,
-                second_distance,
-                min_dist,
-                points_distance,
+            not_on_line_error = (
+                "The point {} is not on the lines segments, "
+                "tolerance violated by {} times.\n"
+                "The distances are {}, {}, {}."
             )
-            raise ValueError(not_on_line_error)
+            raise ValueError(
+                not_on_line_error.format(
+                    point,
+                    np.fabs(second_distance + min_dist - points_distance)
+                    / self.tolerance,
+                    second_distance,
+                    min_dist,
+                    points_distance,
+                )
+            )
         else:
             t_interpolated = (
                 t * second_distance / points_distance
@@ -281,7 +285,6 @@ class Bspline(CoreBspline):
         return super().evaluate_expression(expression, domain=domain)
 
     def construct_derivative(self, expression, order):
-
         if isinstance(expression, list):
             derivative = [self.construct_derivative(exp, order) for exp in expression]
         elif isinstance(expression, ALexpression):
@@ -313,32 +316,31 @@ class Bspline(CoreBspline):
 
     def bspline_get_surface(self):
         """
-        Evaluates the (self.space_dimension) - dimensional B-spline surface over the full domain,
-        stores the radius-vector values in self.rvals
+        Evaluates the (self.space_dimension) - dimensional B-spline surface over
+        the full domain, stores the radius-vector values in self.rvals
         Truncates the coordinates up to the self.tolerance level.            
         """
         self.rvals = self.evaluate_expression(self.bspline)
         for i in range(len(self.rvals)):
             self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
             for j in range(self.space_dimension):
-                self.rvals[i][j] = (
-                    math.trunc(self.rvals[i][j] / self.tolerance) * self.tolerance
-                )
+                self.rvals[i][j] = round(self.rvals[i][j], -int(math.log10(self.tolerance)))
         if self.degree == 1:
-            self._insert_surface_points(self.cv)
+            self._insert_surface_points()
 
-    def _insert_surface_points(self, point_list):
+    def _insert_surface_points(self):
         """
-            For splines of degree 1, the spline passes through the control points.
-            Naively iterate over all points and find proper places to add the control
-            points.
-            Mutates ``self.rvals``.
+        For splines of degree 1, the spline passes through the control points.
+        Naively iterate over all points and find proper places to add the control
+        points.
+        Mutates ``self.rvals``.
         """
 
-        def collinear(p0, p1, p2):
+        def collinear(p0, p1, p2, tolerance=1.0e-12):
             x1, y1 = p1[0] - p0[0], p1[1] - p0[1]
             x2, y2 = p2[0] - p0[0], p2[1] - p0[1]
-            return abs(x1 * y2 - x2 * y1) < 1e-12
+            offset = abs(x1 * y2 - x2 * y1)
+            return offset < tolerance
 
         vertices = [[_cv for _cv in cv] for cv in self.cv]
         current_vertex_index = 1
@@ -346,9 +348,7 @@ class Bspline(CoreBspline):
         rvals = [vertices[0]]
         for rval_index, rval in enumerate(self.rvals[1:-1], start=1):
             if not collinear(
-                    vertices[current_vertex_index - 1],
-                    vertices[current_vertex_index],
-                    rval
+                vertices[current_vertex_index - 1], vertices[current_vertex_index], rval
             ):
                 rvals.append(vertices[current_vertex_index])
                 current_vertex_index += 1

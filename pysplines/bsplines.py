@@ -10,7 +10,6 @@ import sympy
 from sympy.functions.special.bsplines import bspline_basis as sympy_bspline_basis
 import math
 from scipy.integrate import simps
-import matplotlib.pyplot as plt
 import warnings
 
 from pysplines.alexpression import ALexpression
@@ -295,6 +294,7 @@ class Bspline(CoreBspline):
 
     def plot(self, linetype="-", window=None, **kwargs):
         if window is None:
+            import matplotlib.pyplot as plt
             window = plt
         window.plot(
             np.array(self.rvals)[:, 0],
@@ -309,6 +309,7 @@ class Bspline(CoreBspline):
 
     def plot_cv(self, window=None):
         if window is None:
+            import matplotlib.pyplot as plt
             window = plt
         window.plot(
             self.cv[:, 0], self.cv[:, 1], "o", markersize=4, c="black", mfc="none"

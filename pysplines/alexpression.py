@@ -23,7 +23,8 @@ class ALexpression:
         self.t = sympy_expression.free_symbols
         if len(self.t) > 1:
             warnings.warn(
-                "Be careful with the lambdified expression {}, as it has more than one free symbol.".format(
+                "Be careful with the lambdified expression {}, "
+                "as it has more than one free symbol.".format(
                     self.aform
                 )
             )
@@ -51,6 +52,12 @@ class ALexpression:
                     value = self.lform(t)
                 except Exception as e:
                     raise e
+            except TypeError:
+                # Deal with the case when the lambdified expression
+                # has no free variables (e.g., is a constant). In
+                # this case, try to evaluate the expression with no
+                # input arguments
+                value = self.lform()
             return float(value)
         else:
             TypeError("int or float value is required")

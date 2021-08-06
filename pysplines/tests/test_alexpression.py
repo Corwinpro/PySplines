@@ -65,6 +65,52 @@ class TestALexpression(unittest.TestCase):
             0.0,
         )
 
+    def test_plus(self):
+        expression_1 = self.x ** 2 + 3 * self.x - 4
+        expression_2 = self.x - 1
+        expression_3 = self.x ** 2 + 4 * self.x - 5
+
+        al_expression_1 = ALexpression(expression_1)
+        al_expression_2 = ALexpression(expression_2)
+        al_expression_3 = ALexpression(expression_3)
+
+        self.assertEqual(
+            al_expression_1 + al_expression_2, self.x ** 2 + 4 * self.x - 5
+        )
+        self.assertEqual(al_expression_1 + al_expression_2, al_expression_3)
+        self.assertEqual((al_expression_1 + al_expression_2)(1), 0)
+
+    def test_negative(self):
+        # Given
+        al_expression = ALexpression(self.expression)
+
+        # Then
+        self.assertEqual((-al_expression)(1), -8.0)
+        self.assertEqual(-al_expression + (self.x ** 2.0 + 3 * self.x + 4), 0)
+
+        # When
+        negative_expression = -al_expression
+        # Then
+        self.assertIsNot(negative_expression, -al_expression)
+
+    def test_div_mult(self):
+        expression_1 = self.x ** 2 + 3 * self.x - 4
+        expression_2 = self.x - 1
+        expression_3 = self.x + 4
+
+        al_expression_1 = ALexpression(expression_1)
+        al_expression_2 = ALexpression(expression_2)
+        al_expression_3 = ALexpression(expression_3)
+
+        trivial_expression_1 = al_expression_1 / al_expression_2 / al_expression_3
+        trivial_expression_2 = al_expression_3 * al_expression_2 / al_expression_1
+
+        self.assertEqual(trivial_expression_1.simplify(), 1)
+        self.assertEqual(trivial_expression_2.simplify(), 1)
+
+        self.assertEqual((al_expression_1 / al_expression_2)(1), 5)
+        self.assertEqual((al_expression_3 * al_expression_2)(2), 6)
+
 
 if __name__ == "__main__":
     unittest.main()

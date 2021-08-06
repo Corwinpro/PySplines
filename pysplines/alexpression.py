@@ -24,9 +24,7 @@ class ALexpression:
         if len(self.t) > 1:
             warnings.warn(
                 "Be careful with the lambdified expression {}, "
-                "as it has more than one free symbol.".format(
-                    self.aform
-                )
+                "as it has more than one free symbol.".format(self.aform)
             )
 
         self.lform = None
@@ -132,7 +130,7 @@ class ALexpression:
 
         : param level: simplification level
             level == 0: basic simplification through sympy.factor. It performs
-            simple transformation that puts the expression into the standard 
+            simple transformation that puts the expression into the standard
             form p/q, which is much faster than a generic .simplify
             level == 1: full simplification through sympy.simplify
         """

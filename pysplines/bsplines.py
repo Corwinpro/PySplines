@@ -19,15 +19,15 @@ from pysplines.alexpression import is_numeric_argument
 class CoreBspline:
     def __init__(self, cv, degree=3, n=100, periodic=False):
         """
-            Clamped B-Spline with sympy: Core class
+        Clamped B-Spline with sympy: Core class
 
-            space_dimension: problem dimension (2D only)
-            cv: control points vector
-            degree:   Curve degree
-            n: N discretization points
-            periodic: default - False; True - Curve is closed
+        space_dimension: problem dimension (2D only)
+        cv: control points vector
+        degree:   Curve degree
+        n: N discretization points
+        periodic: default - False; True - Curve is closed
 
-            kv: bspline knot vector
+        kv: bspline knot vector
         """
         self.x = sympy.var("x")
 
@@ -47,8 +47,8 @@ class CoreBspline:
         self.bspline = self.construct_bspline_expression()
 
     def construct_knot_vector(self):
-        """ 
-            Calculates knot vector of a uniform B-spline
+        """
+        Calculates knot vector of a uniform B-spline
         """
         cv = np.asarray(self.cv)
         count = cv.shape[0]
@@ -102,7 +102,7 @@ class CoreBspline:
 
         : param domain: single value or a list of values to evaluate the expression at
 
-        Returns: 
+        Returns:
             List of the expression values.
             If there's only one element to return in list, return the element instead.
             (The last is the case when a point or t is given)
@@ -196,7 +196,7 @@ class Bspline(CoreBspline):
 
     def get_t_from_point(self, point):
         """
-        Given a point, we check if the point lies on the B-spline, 
+        Given a point, we check if the point lies on the B-spline,
         and what internal parameter 't' it corresponds to.
 
         Returns:
@@ -204,7 +204,7 @@ class Bspline(CoreBspline):
 
         TODO:
         - Now we only return t for points that are already on the existing lines.
-          However, this is not always correct - if the bspline discretization is 
+          However, this is not always correct - if the bspline discretization is
           too coarse, some of the real points won't be on the existing lines.
           We need to check if the 'point' is actually near the point, predicted by 't'.
         """
@@ -310,7 +310,7 @@ class Bspline(CoreBspline):
         If a set of points (pointset) is given, conversts the points to internal parameter.
         If a internal parameter t is given, calculates the numerical value straight away.
 
-        Returns: 
+        Returns:
             List of the expression values.
             If there's only one element to return in list, return the element instead.
             (The last is the case when a point or t is given)
@@ -339,6 +339,7 @@ class Bspline(CoreBspline):
     def plot(self, linetype="-", window=None, **kwargs):
         if window is None:
             import matplotlib.pyplot as plt
+
             window = plt
         window.plot(
             np.array(self.rvals)[:, 0],
@@ -354,6 +355,7 @@ class Bspline(CoreBspline):
     def plot_cv(self, window=None):
         if window is None:
             import matplotlib.pyplot as plt
+
             window = plt
         window.plot(
             self.cv[:, 0], self.cv[:, 1], "o", markersize=4, c="black", mfc="none"
@@ -363,13 +365,15 @@ class Bspline(CoreBspline):
         """
         Evaluates the (self.space_dimension) - dimensional B-spline surface over
         the full domain, stores the radius-vector values in self.rvals
-        Truncates the coordinates up to the self.tolerance level.            
+        Truncates the coordinates up to the self.tolerance level.
         """
         self.rvals = self.evaluate_expression(self.bspline)
         for i in range(len(self.rvals)):
             self.point_to_t_dict[tuple(self.rvals[i])] = self.dom[i]
             for j in range(self.space_dimension):
-                self.rvals[i][j] = round(self.rvals[i][j], -int(math.log10(self.tolerance)))
+                self.rvals[i][j] = round(
+                    self.rvals[i][j], -int(math.log10(self.tolerance))
+                )
         if self.degree == 1:
             self._insert_surface_points()
 
@@ -483,8 +487,8 @@ class Bspline(CoreBspline):
     def refine_curvature(self):
         """
         Some of the B-spline parts can be underresolved, which yields sharp corners
-        in the high-curvature regions. 
-        We refine the surface such that the three consecutive points (1,2,3) lie 
+        in the high-curvature regions.
+        We refine the surface such that the three consecutive points (1,2,3) lie
         almost on the same line, such that the angle((2,1), (2,3)) <= self.curvature_tolerance_angle.
         We iterate and refine the surface both in the forward and backwards directions.
 
@@ -577,7 +581,7 @@ class Bspline(CoreBspline):
         We can reduce the mass matrix to a Diagonally Lumped Mass Matrix (DLMM).
         Then only the diagonal elements appear.
 
-        We use the mass matrix to correct the gradients with respect to control 
+        We use the mass matrix to correct the gradients with respect to control
         points positions, i.e. map the discrete gradient vector to the parameter-independent
         case. Read about it here: http://dx.doi.org/10.1016/j.cad.2016.06.002
 

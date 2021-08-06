@@ -39,33 +39,31 @@ class ALexpression:
         return self.__repr__()
 
     def __call__(self, t):
-        if is_numeric_argument(t):
-            if self.lform is None:
-                self.simplify()
-                self.lform = sympy.lambdify(self.t, self.aform)
-            try:
-                value = self.lform(t)
-            except ValueError:
-                self.simplify(level=1)
-                self.lform = sympy.lambdify(self.t, self.aform)
-                try:
-                    value = self.lform(t)
-                except Exception as e:
-                    raise e
-            except TypeError:
-                # Deal with the case when the lambdified expression
-                # has no free variables (e.g., is a constant). In
-                # this case, try to evaluate the expression with no
-                # input arguments
-                value = self.lform()
-            return float(value)
-        else:
-            TypeError("int or float value is required")
+        if not is_numeric_argument(t):
+            raise TypeError("int or float value is required")
+
+        if self.lform is None:
+            self.aform = self.simplify()
+            self.lform = sympy.lambdify(self.t, self.aform)
+
+        try:
+            value = self.lform(t)
+        except ValueError:
+            self.aform = self.simplify(level=1)
+            self.lform = sympy.lambdify(self.t, self.aform)
+            value = self.lform(t)
+        except TypeError:
+            # Deal with the case when the lambdified expression
+            # has no free variables (e.g., is a constant). In
+            # this case, try to evaluate the expression with no
+            # input arguments
+            value = self.lform()
+        return float(value)
 
     def __mul__(self, other):
         if isinstance(other, ALexpression):
             return ALexpression(self.aform * other.aform)
-        elif isinstance(other, sympy.Expr):
+        elif isinstance(other, sympy.Expr) or is_numeric_argument(other):
             return ALexpression(self.aform * other)
         else:
             raise TypeError("int, float value or ALexpression is required")
@@ -129,14 +127,16 @@ class ALexpression:
 
     def simplify(self, level=0):
         """
-        Simplify the .aform
-        : param level: simplificatio level
-            level == 0: basic simplification through sympy.cancel. It performs 
+        Simplify the ``self.__initial_aform``, and return the simplified
+        version
+
+        : param level: simplification level
+            level == 0: basic simplification through sympy.factor. It performs
             simple transformation that puts the expression into the standard 
             form p/q, which is much faster than a generic .simplify
             level == 1: full simplification through sympy.simplify
         """
         if level == 0:
-            self.aform = sympy.factor(self.__initial_aform)
+            return sympy.factor(self.__initial_aform)
         elif level == 1:
-            self.aform = sympy.simplify(self.__initial_aform)
+            return sympy.simplify(self.__initial_aform)

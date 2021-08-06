@@ -1,6 +1,5 @@
 import warnings
 import sympy
-import numpy
 
 
 def is_numeric_argument(arg):

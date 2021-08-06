@@ -11,7 +11,6 @@ with the second one being much smoother in the areas with high curvature.
 """
 
 from pysplines.example_bspline import Example_BSpline
-import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 

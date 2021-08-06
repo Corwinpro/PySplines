@@ -135,11 +135,13 @@ class Bspline(CoreBspline):
     def __init__(self, cv, degree=3, n=100, periodic=False, **kwargs):
         super().__init__(cv, degree=degree, n=n, periodic=periodic)
 
-        self.bspline_derivative = self.construct_derivative(self.bspline, 1)
-        self.bspline_hessian = self.construct_derivative(self.bspline, 2)
+        self._bspline_derivative = None
+        self._bspline_hessian = None
+        self.__arc_length = None
+        self.__normal = None
+        self.__curvature = None
+        self.__displacement = None
 
-        # Generating line / surface properties
-        self.generate_surface_properties()
         if kwargs.get("normalize_points", True):
             self.normalize_points(self.n)
         else:
@@ -149,6 +151,48 @@ class Bspline(CoreBspline):
         if self.is_bspline_refined:
             self.curvature_tolerance_angle = kwargs.get("angle_tolerance", 1.0e-2)
             self.refine_curvature()
+
+    @property
+    def bspline_derivative(self):
+        if self._bspline_derivative is None:
+            self._bspline_derivative = self.construct_derivative(self.bspline, 1)
+
+        return self._bspline_derivative
+
+    @property
+    def bspline_hessian(self):
+        if self._bspline_hessian is None:
+            self._bspline_hessian = self.construct_derivative(self.bspline, 2)
+
+        return self._bspline_hessian
+
+    @property
+    def _arc_length(self):
+        if self.__arc_length is None:
+            self.__arc_length = self.generate_arc_length()
+
+        return self.__arc_length
+
+    @property
+    def _normal(self):
+        if self.__normal is None:
+            self.__normal = self.generate_normal()
+
+        return self.__normal
+
+    @property
+    def _curvature(self):
+        if self.__curvature is None:
+            self.__curvature = self.generate_curvature()
+
+        return self.__curvature
+
+    @property
+    def _displacement(self):
+        if self.__displacement is None:
+            self.__displacement = self.generate_displacements()
+
+        return self.__displacement
 
     def get_t_from_point(self, point):
         """
@@ -483,12 +527,6 @@ class Bspline(CoreBspline):
         self.dom = proper_t_dist[::-1]
         self.bspline_get_surface()
         self.n = len(self.dom)
-
-    def generate_surface_properties(self):
-        self._arc_length = self.generate_arc_length()
-        self._normal = self.generate_normal()
-        self._curvature = self.generate_curvature()
-        self._displacement = self.generate_displacements()
 
     def generate_arc_length(self):
         L = ALexpression(

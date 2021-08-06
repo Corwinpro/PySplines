@@ -137,6 +137,6 @@ class ALexpression:
             level == 1: full simplification through sympy.simplify
         """
         if level == 0:
-            self.aform = sympy.cancel(self.__initial_aform)
+            self.aform = sympy.factor(self.__initial_aform)
         elif level == 1:
             self.aform = sympy.simplify(self.__initial_aform)

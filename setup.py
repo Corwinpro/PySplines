@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 # discovering any Python packages we ship.
 setup(
     name="pysplines",
-    version="0.1.0.dev2",
+    version="0.2.0",
     author="Petr Kungurtsev",
     packages=find_packages(),
     # PyPI packages required for the *installation* and usual running of the

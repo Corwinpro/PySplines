@@ -15,7 +15,7 @@ with open(path.join(this_directory, "README.rst"), encoding="utf-8") as f:
 # discovering any Python packages we ship.
 setup(
     name="pysplines",
-    version="0.2.0",
+    version="0.3.0.dev0",
     author="Petr Kungurtsev",
     packages=find_packages(),
     # PyPI packages required for the *installation* and usual running of the

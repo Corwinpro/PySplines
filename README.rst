@@ -1,6 +1,6 @@
-========
+=========
 PySplines
-========
+=========
 
 Python / Sympy implementation of Uniform rational B-splines. 
 

@@ -154,15 +154,14 @@ class Bspline(CoreBspline):
         self.__curvature = None
         self.__displacement = None
 
-        if normalize_points:
-            self.dom = self.normalize_points(self.n)
-
         if refine:
             self.dom = self.refine(
                 min_element_size=min_element_size,
                 max_element_size=max_element_size,
                 angle=tolerance_angle,
             )
+        elif normalize_points:
+            self.dom = self.normalize_points(self.n)
 
         self.bspline_get_surface()
         self.n = len(self.dom)

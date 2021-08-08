@@ -138,6 +138,7 @@ class Bspline(CoreBspline):
         degree=3,
         n=100,
         periodic=False,
+        normalize_points=True,
         refine=False,
         max_element_size=1.0e-1,
         min_element_size=1.0e-3,
@@ -153,20 +154,18 @@ class Bspline(CoreBspline):
         self.__curvature = None
         self.__displacement = None
 
-        if kwargs.get("normalize_points", True):
-            self.normalize_points(self.n)
-        else:
-            self.bspline_get_surface()
+        if normalize_points:
+            self.dom = self.normalize_points(self.n)
 
         if refine:
-            new_dom = self.refine(
+            self.dom = self.refine(
                 min_element_size=min_element_size,
                 max_element_size=max_element_size,
                 angle=tolerance_angle,
             )
-            self.dom = new_dom
-            self.bspline_get_surface()
-            self.n = len(self.dom)
+
+        self.bspline_get_surface()
+        self.n = len(self.dom)
 
     @property
     def bspline_derivative(self):
@@ -319,7 +318,9 @@ class Bspline(CoreBspline):
 
         return t_interpolated
 
-    def evaluate_expression(self, expression, point=None, pointset=None, *, t=None):
+    def evaluate_expression(
+        self, expression, point=None, pointset=None, *, t=None, domain=None
+    ):
         """
         Given an ALexpression expression, calculates numerical values of the expression.
         If a point in physical space is given, converts the point to internal parameter.
@@ -437,22 +438,17 @@ class Bspline(CoreBspline):
             - Find a way to estimate the minimum necessary number of points on the surface,
                 when we construct the fine discretization.
         """
-        self.n = 3000
-        self.dom = np.linspace(0, self.max_param, self.n)
+        dom = np.linspace(0, self.max_param, n)
         self.bspline_get_surface()
-        self.n = n
 
-        L = self.arc_length()
+        arc_length = self.evaluate_expression(self._arc_length, domain=dom)
 
-        totalLength = simps(L, self.dom)
-        avgDistance = totalLength / n
+        average_distance = simps(arc_length, dom) / n
 
         _tmp_dist = 0.0
-        proper_t_dist = []
-        proper_t_dist.append(self.dom[0])
-
-        for i in range(1, len(self.dom) - 1):
-            if _tmp_dist < avgDistance:
+        new_dom = [dom[0]]
+        for i in range(1, len(dom) - 1):
+            if _tmp_dist < average_distance:
                 _tmp_dist += (
                     sum(
                         (self.rvals[i][j] - self.rvals[i - 1][j]) ** 2.0
@@ -461,12 +457,10 @@ class Bspline(CoreBspline):
                 ) ** 0.5
             else:
                 _tmp_dist = 0
-                proper_t_dist.append(self.dom[i])
-        proper_t_dist.append(self.dom[-1])
+                new_dom.append(dom[i])
+        new_dom.append(dom[-1])
 
-        self.dom = proper_t_dist
-        self.bspline_get_surface()
-        self.n = len(self.dom)
+        return new_dom
 
     def dots_angles(self, direction="forward"):
         """

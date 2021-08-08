@@ -140,9 +140,9 @@ class Bspline(CoreBspline):
         periodic=False,
         normalize_points=True,
         refine=False,
-        max_element_size=1.0e-1,
-        min_element_size=1.0e-3,
-        tolerance_angle=0.1,
+        max_element_size=3.0e-2,
+        min_element_size=1.0e-4,
+        tolerance_angle=0.01,
         **kwargs
     ):
         super().__init__(cv, degree=degree, n=n, periodic=periodic)
@@ -568,8 +568,8 @@ class Bspline(CoreBspline):
             arc_length = self.evaluate_expression(self._arc_length, t=current_t)
 
             dt = 2.0 * angle / (abs(curvature) * arc_length + 1.0e-6)
-            dt = max(dt, max_element_size / arc_length)
-            dt = min(dt, min_element_size / arc_length)
+            dt = min(dt, max_element_size / arc_length)
+            dt = max(dt, min_element_size / arc_length)
             if current_t + dt > self.dom[-1]:
                 current_t = self.dom[-1]
             else:

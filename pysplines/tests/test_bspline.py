@@ -39,12 +39,10 @@ class TestBspline(unittest.TestCase):
             abs(self.bspline.get_t_from_point(self.bspline.cv[0]) - self.bspline.kv[0])
             < _TOLERANCE
         )
-        self.assertTrue(
-            abs(
-                self.bspline.get_t_from_point(self.bspline.cv[2])
-                - self.bspline.kv[-1] / 2.0
-            )
-            < _TOLERANCE
+        self.assertAlmostEqual(
+            self.bspline.get_t_from_point(self.bspline.cv[2]),
+            self.bspline.kv[-1] / 2.0,
+            places=5,
         )
         self.assertTrue(
             abs(

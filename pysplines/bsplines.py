@@ -560,7 +560,7 @@ class Bspline(CoreBspline):
             new domain in the parametric space
         """
         new_dom = []
-        current_t = new_dom[0]
+        current_t = self.dom[0]
         new_dom.append(current_t)
 
         while current_t < self.dom[-1]:

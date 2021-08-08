@@ -132,7 +132,18 @@ class CoreBspline:
 
 
 class Bspline(CoreBspline):
-    def __init__(self, cv, degree=3, n=100, periodic=False, **kwargs):
+    def __init__(
+        self,
+        cv,
+        degree=3,
+        n=100,
+        periodic=False,
+        refine=False,
+        max_element_size=1.0e-1,
+        min_element_size=1.0e-3,
+        tolerance_angle=0.1,
+        **kwargs
+    ):
         super().__init__(cv, degree=degree, n=n, periodic=periodic)
 
         self._bspline_derivative = None
@@ -147,10 +158,15 @@ class Bspline(CoreBspline):
         else:
             self.bspline_get_surface()
 
-        self.is_bspline_refined = kwargs.get("refine", False)
-        if self.is_bspline_refined:
-            self.curvature_tolerance_angle = kwargs.get("angle_tolerance", 1.0e-2)
-            self.refine_curvature()
+        if refine:
+            new_dom = self.refine(
+                min_element_size=min_element_size,
+                max_element_size=max_element_size,
+                angle=tolerance_angle,
+            )
+            self.dom = new_dom
+            self.bspline_get_surface()
+            self.n = len(self.dom)
 
     @property
     def bspline_derivative(self):
@@ -532,11 +548,54 @@ class Bspline(CoreBspline):
         self.bspline_get_surface()
         self.n = len(self.dom)
 
+    def refine(self, min_element_size, max_element_size, angle):
+        """Refine the discrete representation of the bspline, using the
+        curvature as the refinement proxy. Points are placed such that
+        the d distance between them is ``min_element_size`` < d <
+        ``max_element_size``, and the points are placed within ``angle``
+        between each other (based on curvature radius).
+
+        Parameters
+        ----------
+        min_element_size : float
+        max_element_size : float
+        angle : float
+
+        Returns
+        -------
+        new_dom : list(float)
+            new domain in the parametric space
+        """
+        new_dom = []
+        current_t = new_dom[0]
+        new_dom.append(current_t)
+
+        while current_t < self.dom[-1]:
+            curvature = self.evaluate_expression(self._curvature, t=current_t)
+            arc_length = self.evaluate_expression(self._arc_length, t=current_t)
+
+            dt = 2.0 * angle / (abs(curvature) * arc_length + 1.0e-6)
+            dt = max(dt, max_element_size / arc_length)
+            dt = min(dt, min_element_size / arc_length)
+            if current_t + dt > self.dom[-1]:
+                current_t = self.dom[-1]
+            else:
+                current_t += dt
+
+            new_dom.append(current_t)
+
+        if abs(new_dom[-1] - self.dom[-1]) < 1.0e-4:
+            new_dom[-1] = self.dom[-1]
+        else:
+            new_dom.append(self.dom[-1])
+
+        return new_dom
+
     def generate_arc_length(self):
-        L = ALexpression(
+        arc_length = ALexpression(
             sympy.sqrt(np.inner(self.bspline_derivative, self.bspline_derivative).aform)
         )
-        return L
+        return arc_length
 
     def generate_normal(self):
         if self.space_dimension > 2:

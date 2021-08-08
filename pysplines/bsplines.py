@@ -132,7 +132,19 @@ class CoreBspline:
 
 
 class Bspline(CoreBspline):
-    def __init__(self, cv, degree=3, n=100, periodic=False, **kwargs):
+    def __init__(
+        self,
+        cv,
+        degree=3,
+        n=100,
+        periodic=False,
+        normalize_points=True,
+        refine=False,
+        max_element_size=3.0e-2,
+        min_element_size=1.0e-4,
+        tolerance_angle=0.01,
+        **kwargs
+    ):
         super().__init__(cv, degree=degree, n=n, periodic=periodic)
 
         self._bspline_derivative = None
@@ -142,15 +154,17 @@ class Bspline(CoreBspline):
         self.__curvature = None
         self.__displacement = None
 
-        if kwargs.get("normalize_points", True):
-            self.normalize_points(self.n)
-        else:
-            self.bspline_get_surface()
+        if refine:
+            self.dom = self.refine(
+                min_element_size=min_element_size,
+                max_element_size=max_element_size,
+                angle=tolerance_angle,
+            )
+        elif normalize_points:
+            self.dom = self.normalize_points(self.n)
 
-        self.is_bspline_refined = kwargs.get("refine", False)
-        if self.is_bspline_refined:
-            self.curvature_tolerance_angle = kwargs.get("angle_tolerance", 1.0e-2)
-            self.refine_curvature()
+        self.bspline_get_surface()
+        self.n = len(self.dom)
 
     @property
     def bspline_derivative(self):
@@ -303,7 +317,9 @@ class Bspline(CoreBspline):
 
         return t_interpolated
 
-    def evaluate_expression(self, expression, point=None, pointset=None, *, t=None):
+    def evaluate_expression(
+        self, expression, point=None, pointset=None, *, t=None, domain=None
+    ):
         """
         Given an ALexpression expression, calculates numerical values of the expression.
         If a point in physical space is given, converts the point to internal parameter.
@@ -421,22 +437,17 @@ class Bspline(CoreBspline):
             - Find a way to estimate the minimum necessary number of points on the surface,
                 when we construct the fine discretization.
         """
-        self.n = 3000
-        self.dom = np.linspace(0, self.max_param, self.n)
+        dom = np.linspace(0, self.max_param, n)
         self.bspline_get_surface()
-        self.n = n
 
-        L = self.arc_length()
+        arc_length = self.evaluate_expression(self._arc_length, domain=dom)
 
-        totalLength = simps(L, self.dom)
-        avgDistance = totalLength / n
+        average_distance = simps(arc_length, dom) / n
 
         _tmp_dist = 0.0
-        proper_t_dist = []
-        proper_t_dist.append(self.dom[0])
-
-        for i in range(1, len(self.dom) - 1):
-            if _tmp_dist < avgDistance:
+        new_dom = [dom[0]]
+        for i in range(1, len(dom) - 1):
+            if _tmp_dist < average_distance:
                 _tmp_dist += (
                     sum(
                         (self.rvals[i][j] - self.rvals[i - 1][j]) ** 2.0
@@ -445,12 +456,10 @@ class Bspline(CoreBspline):
                 ) ** 0.5
             else:
                 _tmp_dist = 0
-                proper_t_dist.append(self.dom[i])
-        proper_t_dist.append(self.dom[-1])
+                new_dom.append(dom[i])
+        new_dom.append(dom[-1])
 
-        self.dom = proper_t_dist
-        self.bspline_get_surface()
-        self.n = len(self.dom)
+        return new_dom
 
     def dots_angles(self, direction="forward"):
         """
@@ -532,11 +541,54 @@ class Bspline(CoreBspline):
         self.bspline_get_surface()
         self.n = len(self.dom)
 
+    def refine(self, min_element_size, max_element_size, angle):
+        """Refine the discrete representation of the bspline, using the
+        curvature as the refinement proxy. Points are placed such that
+        the d distance between them is ``min_element_size`` < d <
+        ``max_element_size``, and the points are placed within ``angle``
+        between each other (based on curvature radius).
+
+        Parameters
+        ----------
+        min_element_size : float
+        max_element_size : float
+        angle : float
+
+        Returns
+        -------
+        new_dom : list(float)
+            new domain in the parametric space
+        """
+        new_dom = []
+        current_t = self.dom[0]
+        new_dom.append(current_t)
+
+        while current_t < self.dom[-1]:
+            curvature = self.evaluate_expression(self._curvature, t=current_t)
+            arc_length = self.evaluate_expression(self._arc_length, t=current_t)
+
+            dt = 2.0 * angle / (abs(curvature) * arc_length + 1.0e-6)
+            dt = min(dt, max_element_size / arc_length)
+            dt = max(dt, min_element_size / arc_length)
+            if current_t + dt > self.dom[-1]:
+                current_t = self.dom[-1]
+            else:
+                current_t += dt
+
+            new_dom.append(current_t)
+
+        if abs(new_dom[-1] - self.dom[-1]) < 1.0e-4:
+            new_dom[-1] = self.dom[-1]
+        else:
+            new_dom.append(self.dom[-1])
+
+        return new_dom
+
     def generate_arc_length(self):
-        L = ALexpression(
+        arc_length = ALexpression(
             sympy.sqrt(np.inner(self.bspline_derivative, self.bspline_derivative).aform)
         )
-        return L
+        return arc_length
 
     def generate_normal(self):
         if self.space_dimension > 2:

@@ -39,7 +39,7 @@ class CoreBspline:
 
         self.max_param = self.cv.shape[0] - (self.degree * (1 - self.periodic))
         self.kv = self.construct_knot_vector()
-        self.dom = np.linspace(0, self.max_param, self.n)
+        self.dom = np.linspace(0, self.max_param, self.n + 1)
 
         self.point_to_t_dict = {}
         self.tolerance = 1.0e-6
@@ -142,10 +142,14 @@ class Bspline(CoreBspline):
         self.__curvature = None
         self.__displacement = None
 
-        if kwargs.get("normalize_points", True):
+        if self.degree == 1:
+            self.n = len(self.cv) - 1
+            self.dom = np.linspace(0, self.max_param, self.n + 1)
+        elif kwargs.get("normalize_points", True):
             self.normalize_points(self.n)
-        else:
-            self.bspline_get_surface()
+
+        self.bspline_get_surface()
+        self.n = len(self.dom)
 
         self.is_bspline_refined = kwargs.get("refine", False)
         if self.is_bspline_refined:
@@ -374,37 +378,6 @@ class Bspline(CoreBspline):
                 self.rvals[i][j] = round(
                     self.rvals[i][j], -int(math.log10(self.tolerance))
                 )
-        if self.degree == 1:
-            self._insert_surface_points()
-
-    def _insert_surface_points(self):
-        """
-        For splines of degree 1, the spline passes through the control points.
-        Naively iterate over all points and find proper places to add the control
-        points.
-        Mutates ``self.rvals``.
-        """
-
-        def collinear(p0, p1, p2, tolerance=1.0e-12):
-            x1, y1 = p1[0] - p0[0], p1[1] - p0[1]
-            x2, y2 = p2[0] - p0[0], p2[1] - p0[1]
-            offset = abs(x1 * y2 - x2 * y1)
-            return offset < tolerance
-
-        vertices = [[_cv for _cv in cv] for cv in self.cv]
-        current_vertex_index = 1
-
-        rvals = [vertices[0]]
-        for rval_index, rval in enumerate(self.rvals[1:-1], start=1):
-            if not collinear(
-                vertices[current_vertex_index - 1], vertices[current_vertex_index], rval
-            ):
-                rvals.append(vertices[current_vertex_index])
-                current_vertex_index += 1
-            rvals.append(rval)
-
-        rvals.append(vertices[-1])
-        self.rvals = rvals
 
     def normalize_points(self, n):
         """
@@ -449,8 +422,6 @@ class Bspline(CoreBspline):
         proper_t_dist.append(self.dom[-1])
 
         self.dom = proper_t_dist
-        self.bspline_get_surface()
-        self.n = len(self.dom)
 
     def dots_angles(self, direction="forward"):
         """

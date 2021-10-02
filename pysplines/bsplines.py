@@ -379,35 +379,6 @@ class Bspline(CoreBspline):
                     self.rvals[i][j], -int(math.log10(self.tolerance))
                 )
 
-    def _insert_surface_points(self):
-        """
-        For splines of degree 1, the spline passes through the control points.
-        Naively iterate over all points and find proper places to add the control
-        points.
-        Mutates ``self.rvals``.
-        """
-
-        def collinear(p0, p1, p2, tolerance=1.0e-12):
-            x1, y1 = p1[0] - p0[0], p1[1] - p0[1]
-            x2, y2 = p2[0] - p0[0], p2[1] - p0[1]
-            offset = abs(x1 * y2 - x2 * y1)
-            return offset < tolerance
-
-        vertices = [[_cv for _cv in cv] for cv in self.cv]
-        current_vertex_index = 1
-
-        rvals = [vertices[0]]
-        for rval_index, rval in enumerate(self.rvals[1:-1], start=1):
-            if not collinear(
-                vertices[current_vertex_index - 1], vertices[current_vertex_index], rval
-            ):
-                rvals.append(vertices[current_vertex_index])
-                current_vertex_index += 1
-            rvals.append(rval)
-
-        rvals.append(vertices[-1])
-        self.rvals = rvals
-
     def normalize_points(self, n):
         """
         Reconstructs the distribution of the internal parameter t in self.dom which corresponds to

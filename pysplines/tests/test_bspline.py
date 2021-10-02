@@ -9,8 +9,8 @@ _TOLERANCE = 5.0e-7
 
 class TestBspline(unittest.TestCase):
     def setUp(self):
-        cv = [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [2.0, 1.0], [2.0, 2.0]]
-        self.bspline = Bspline(cv, n=120)
+        self.cv = [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [2.0, 1.0], [2.0, 2.0]]
+        self.bspline = Bspline(self.cv, n=120)
 
     def test_edge_points(self):
         rvals = np.array(self.bspline.rvals)
@@ -52,3 +52,15 @@ class TestBspline(unittest.TestCase):
             )
             < _TOLERANCE
         )
+
+    def test_bspline_first_order(self):
+        # When
+        spline = Bspline(cv=self.cv, degree=1)
+
+        # Then
+        self.assertEqual(len(spline.rvals), 5)
+        self.assertListEqual(spline.rvals, self.cv)
+
+
+if __name__=="__main__":
+    unittest.main()

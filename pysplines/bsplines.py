@@ -145,12 +145,11 @@ class Bspline(CoreBspline):
         if self.degree == 1:
             self.n = len(self.cv) - 1
             self.dom = np.linspace(0, self.max_param, self.n + 1)
-            return
-
-        if kwargs.get("normalize_points", True):
+        elif kwargs.get("normalize_points", True):
             self.normalize_points(self.n)
-        else:
-            self.bspline_get_surface()
+
+        self.bspline_get_surface()
+        self.n = len(self.dom)
 
         self.is_bspline_refined = kwargs.get("refine", False)
         if self.is_bspline_refined:
@@ -379,8 +378,6 @@ class Bspline(CoreBspline):
                 self.rvals[i][j] = round(
                     self.rvals[i][j], -int(math.log10(self.tolerance))
                 )
-        if self.degree == 1:
-            self._insert_surface_points()
 
     def _insert_surface_points(self):
         """
@@ -454,8 +451,6 @@ class Bspline(CoreBspline):
         proper_t_dist.append(self.dom[-1])
 
         self.dom = proper_t_dist
-        self.bspline_get_surface()
-        self.n = len(self.dom)
 
     def dots_angles(self, direction="forward"):
         """

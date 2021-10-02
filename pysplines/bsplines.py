@@ -39,7 +39,7 @@ class CoreBspline:
 
         self.max_param = self.cv.shape[0] - (self.degree * (1 - self.periodic))
         self.kv = self.construct_knot_vector()
-        self.dom = np.linspace(0, self.max_param, self.n)
+        self.dom = np.linspace(0, self.max_param, self.n + 1)
 
         self.point_to_t_dict = {}
         self.tolerance = 1.0e-6
@@ -141,6 +141,11 @@ class Bspline(CoreBspline):
         self.__normal = None
         self.__curvature = None
         self.__displacement = None
+
+        if self.degree == 1:
+            self.n = len(self.cv) - 1
+            self.dom = np.linspace(0, self.max_param, self.n + 1)
+            return
 
         if kwargs.get("normalize_points", True):
             self.normalize_points(self.n)

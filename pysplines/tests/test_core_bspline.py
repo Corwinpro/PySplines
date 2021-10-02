@@ -13,7 +13,7 @@ class TestCoreBspline(unittest.TestCase):
 
     def test_bspline_domain(self):
         self.assertEqual(self.core_bspline.n, 120)
-        self.assertEqual(len(self.core_bspline.dom), 120)
+        self.assertEqual(len(self.core_bspline.dom), 121)
 
     def test_bspline_basis(self):
         x = sp.var("x")
@@ -54,7 +54,7 @@ class TestCoreBspline(unittest.TestCase):
     def test_bspline_evaluate_expression(self):
         expression = self.core_bspline.bspline
 
-        self.assertEqual(len(self.core_bspline.evaluate_expression(expression)), 120)
+        self.assertEqual(len(self.core_bspline.evaluate_expression(expression)), 121)
         self.assertListEqual(
             self.core_bspline.evaluate_expression(expression, domain=1), [1.0, 1.0]
         )
